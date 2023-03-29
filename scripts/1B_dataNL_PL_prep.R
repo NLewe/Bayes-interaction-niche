@@ -14,11 +14,13 @@ metaM0 <- read_xlsx("data/M0_meta.xlsx")
 meta_plants <- read_rds ("data/meta_plants.rds")
 meta_M1Wcontrol <-  read_rds ("data/meta_M1Wcontrol.rds")
 
+# NL data ##
 dataNLrootstosoil <- read_rds ("data/dataNLrootstosoil.rds")# NLFA_data for exp 2 #
-Metrics_exp2 <- read_rds("data/Metrics_exp2.rds")  # samplewise results of interaction niche properties #
 
-dataNL <- read_rds ("data/dataNL.rds")
+# tree data ##
 A <- read_rds ("data/covariance_str_tree_trnl_plants.rds") #covaraince structure based on trnl tree , for glmm models
+
+# PLFA data ###
 
 
 

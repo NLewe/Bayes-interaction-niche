@@ -12,7 +12,7 @@ library(readxl)
 #meta files ##
 metaM0 <- read_xlsx("data/M0_meta.xlsx")
 meta_plants <- read_rds ("data/meta_plants.rds")
-meta_M1Wcontrol <-  read_rds ("data/meta_M1Wcontrol.rds")
+meta_M1Wcontrol <- read_xlsx ("data/meta_M1Wcontrol.xlsx")
 
 # NL data ##
 dataNLrootstosoil <- read_rds ("data/dataNLrootstosoil.rds")# NLFA_data for exp 2 #

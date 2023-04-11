@@ -6,6 +6,7 @@ library(readxl)
 library(phyloseq)
 library (vegan)
 library (picante)
+library (readxl)
 # data# ####
 
 
@@ -13,7 +14,7 @@ library (picante)
 
 #meta
 metaM0 <- read_xlsx("data/M0_meta.xlsx")
-
+meta_M1Wcontrol <- read_xlsx ("data/meta_M1Wcontrol.xlsx")
 meta_plants <- read_rds ("data/meta_plants.rds")
 meta_M1 <- read.csv ("data/meta_M1.csv")
 ps_Glo <- read_rds("resultsCh2/ps_Glo.rds")

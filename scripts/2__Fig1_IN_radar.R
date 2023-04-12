@@ -8,7 +8,7 @@ library (ggpubr)
 library (scales)
 library (rstatix)
 library (flextable)
-
+library (RVAideMemoire)
 
 
 ## radar plots per experiment ####
@@ -73,11 +73,15 @@ All_metrics_E1_8Sp %>%
   select (-PlantFamily)  %>% 
   mutate (RelGenSpec = (Shannon + Richness + uniqueASV + CU + `β(core)`/100 + PD + MPD) /7 )
 
-RelGen_E1_E2 %>%  reorder () %>% 
-  mutate (round (across (), 2))
+## table for plant species ###
+RelGen_E1_E2 %>%  
+  mutate (RelGenSpec = round (RelGenSpec, 3)) %>% 
+  select (PlantSpeciesfull, RelGenSpec, Exp) %>% 
+  pivot_wider (values_from = RelGenSpec, names_from = Exp) %>% 
+  flextable ()
                           
-(flextable ()
 
+## Rel Gen for each sample ##
 RelGen_E1_E2_sample <-
 All_Metrics_E2_sample %>% 
   ungroup() %>% 
@@ -121,17 +125,29 @@ RelGen_E1_E2 %>%
  RelGen_E1_E2_sample %>% ggplot (aes (x = PlantSpeciesfull, y = RelGenSpec, fill = Exp)) + 
   geom_boxplot (position = position_dodge ())
 
+ 
 
-
+# t test #####
  ### I think sorting alphabetically looks better!!!
   
- RelGen_E1_E2_sample %>%  group_by ( PlantSpeciesfull ) %>%  t_test (RelGenSpec ~ Exp)
-
+ RelGen_E1_E2_sample %>%  
+   group_by ( PlantSpeciesfull ) %>%  
+ summarise(model = list(perm.t.test (RelGenSpec ~ Exp),
+                                      data = cur_data(), nperm=999)) %>%
+   mutate(res = map(model, broom::tidy)) %>%
+   unnest(res)
 
  RelGen_E1_E2_sample %>%  
    group_by ( PlantSpeciesfull ) %>%  
    t_test (RelGenSpec ~ Exp) %>%  
    flextable() %>%  save_as_image("figures/ttest_boxplot_InNi.png")
 
+ ## Permutational t test #####
+Permut_Ttest_RelGenSpec <-
+ RelGen_E1_E2_sample %>%  
+    filter (!is.na (PD)) %>% 
+group_split (PlantSpeciesfull) %>%  # split into each plant species
+   map (~perm.t.test (.$RelGenSpec ~ .$Exp, nperm= 999)) 
+   
 
 

@@ -172,7 +172,7 @@ DAA_fittest_RelGenSpec_table <-
   as_tibble (rownames = "ASV_ID") %>% 
   left_join (taxa_edgeR_gen) %>% 
   filter (Phylum == "Glomeromycota" ) %>% 
-  add_column (Gen = "RelGen") %>% ### change here 
+  add_column (PlaSpe = "RelGen") %>% ### change here 
   mutate (Sign = case_when(PValue<=0.05 ~ "sign.", PValue > 0.05 ~ "ns")) %>%  
   arrange (PValue)
 
@@ -191,7 +191,7 @@ DAA_fittest1_table <-
   as_tibble (rownames = "ASV_ID") %>% 
   left_join (taxa_edgeR_gen) %>% 
   filter (Phylum == "Glomeromycota" ) %>% 
-  add_column (Gen = "AchMil") %>% ### change here 
+  add_column (PlaSpe = "AchMil") %>% ### change here 
   mutate (Sign = case_when(PValue<=0.05 ~ "sign.", PValue > 0.05 ~ "ns")) %>%  
   arrange (PValue)
 
@@ -199,7 +199,7 @@ DAA_fittest1_table <-
 #DAA_fitGen03_table %>% ggplot (aes (x = Genus , y = logFC)) + geom_violin() + geom_point()
 
 
-#GLM F-test  test 2#####
+#GLM F-test  Rel generalism test 2#####
 #compare the coefficients of the glm 
 # i.e. compare treatments
 #DAA_fittest2_vsC <- glmQLFTest(fit, contrast = my_contrasts [,"B2"]) ## for design matrix ~ 0+ group
@@ -214,12 +214,12 @@ DAA_fittest2_table <-
   as_tibble (rownames = "ASV_ID") %>% 
   left_join (taxa_edgeR_gen) %>% 
   filter (Phylum == "Glomeromycota" ) %>% 
-  add_column (Gen = "RelGen") %>% ### change here 
+  add_column (PlaSpe = "RelGen") %>% ### change here 
   mutate (Sign = case_when(PValue<=0.05 ~ "sign.", PValue > 0.05 ~ "ns")) %>%  
   arrange (PValue)
 
 
-#GLM F-test test 3 #####
+#GLM F-test Agr test 3 #####
 #compare the coefficients of the glm 
 # i.e. compare treatments
 DAA_fittest3_vsC <- glmQLFTest(fit, coef = 3) 
@@ -233,11 +233,11 @@ DAA_fittest3_table <-
   as_tibble (rownames = "ASV_ID") %>% 
   left_join (taxa_edgeR_gen) %>% 
   filter (Phylum == "Glomeromycota" ) %>% 
-  add_column (Gen = "Agr") %>% ### change here 
+  add_column (PlaSpe = "AgrCap") %>% ### change here 
   mutate (Sign = case_when(PValue<=0.05 ~ "sign.", PValue > 0.05 ~ "ns")) %>%  
   arrange (PValue)
 
-#GLM F-test test 4 #####
+#GLM F-test BroWil test 4 #####
 #compare the coefficients of the glm 
 # i.e. compare treatments
 #DAA_fitgen06_vsC <- glmQLFTest(fit, contrast = my_contrasts [,"G6"]) 
@@ -252,13 +252,13 @@ DAA_fittest4_table <-
   as_tibble (rownames = "ASV_ID") %>% 
   left_join (taxa_edgeR_gen) %>% 
   filter (Phylum == "Glomeromycota" ) %>% 
-  add_column (Gen = "Bro") %>% ### change here 
+  add_column (PlaSpe = "BroWil") %>% ### change here 
   mutate (Sign = case_when(PValue<=0.05 ~ "sign.", PValue > 0.05 ~ "ns")) %>%  
   arrange (PValue)
 
 
 
-#GLM F-test Bi 5#####
+#GLM F-test CicInt 5#####
 #compare the coefficients of the glm 
 # i.e. compare treatments
 DAA_fittest5_vsC <- glmQLFTest(fit, coef = 5) 
@@ -272,12 +272,12 @@ DAA_fittest5_table <-
   as_tibble (rownames = "ASV_ID") %>% 
   left_join (taxa_edgeR_gen) %>% 
   filter (Phylum == "Glomeromycota" ) %>% 
-  add_column (Gen = "Cic") %>% ### change here 
+  add_column (PlaSpe = "CicInt") %>% ### change here 
   mutate (Sign = case_when(PValue<=0.05 ~ "sign.", PValue > 0.05 ~ "ns")) %>%  
   arrange (PValue)
 
 
-#GLM F-test test 6#####
+#GLM F-test Hol Lantest 6#####
 #compare the coefficients of the glm 
 # i.e. compare treatments
 DAA_fittest6_vsC <- glmQLFTest(fit, coef = 6) 
@@ -291,13 +291,13 @@ DAA_fittest6_table <-
   as_tibble (rownames = "ASV_ID") %>% 
   left_join (taxa_edgeR_gen) %>% 
   filter (Phylum == "Glomeromycota" ) %>% 
-  add_column (Gen = "Hol") %>% ### change here 
+  add_column (PlaSpe = "HolLan") %>% ### change here 
   mutate (Sign = case_when(PValue<=0.05 ~ "sign.", PValue > 0.05 ~ "ns")) %>%  
   arrange (PValue)
 
 
 
-#GLM F-test test7#####
+#GLM F-test tPlaLan  est7#####
 #compare the coefficients of the glm 
 # i.e. compare treatments
 DAA_fittest7_vsC <- glmQLFTest(fit, coef = 7) 
@@ -311,7 +311,7 @@ DAA_fittest7_table <-
   as_tibble (rownames = "ASV_ID") %>% 
   left_join (taxa_edgeR_gen) %>% 
   filter (Phylum == "Glomeromycota" ) %>% 
-  add_column (Gen = "PlaLan") %>% ### change here 
+  add_column (PlaSpe = "PlaLan") %>% ### change here 
   mutate (Sign = case_when(PValue<=0.05 ~ "sign.", PValue > 0.05 ~ "ns")) %>%  
   arrange (PValue)
 
@@ -330,11 +330,11 @@ DAA_fittest8_table <-
   as_tibble (rownames = "ASV_ID") %>% 
   left_join (taxa_edgeR_gen) %>% 
   filter (Phylum == "Glomeromycota" ) %>% 
-  add_column (Gen = "PoaCit") %>% ### change here 
+  add_column (PlaSpe = "PoaCit") %>% ### change here 
   mutate (Sign = case_when(PValue<=0.05 ~ "sign.", PValue > 0.05 ~ "ns")) %>%  
   arrange (PValue)
 
-#GLM F-test test9#####
+#GLM F-test SchAru test9#####
 
 #compare the coefficients of the glm 
 # i.e. compare treatments
@@ -349,7 +349,7 @@ DAA_fittest9_table <-
   as_tibble (rownames = "ASV_ID") %>% 
   left_join (taxa_edgeR_gen) %>% 
   filter (Phylum == "Glomeromycota" ) %>% 
-  add_column (Gen = "Sch") %>% ### change here 
+  add_column (PlaSpe = "SchAru ") %>% ### change here 
   mutate (Sign = case_when(PValue<=0.05 ~ "sign.", PValue > 0.05 ~ "ns")) %>%  
   arrange (PValue)
 
@@ -412,24 +412,39 @@ order_taxa <- get_taxa_name(p) %>%
 ps_edgeR_glo_ASV <- subset_taxa(ps_edgeR_relGenSpec, Phylum == "Glomeromycota")
 ps_edgeR_glo_ASV_rel <- relative_abundance(ps_edgeR_glo_ASV)
 
-rel_ASV_abundance_soil <- 
+rel_ASV_abundance_soil_PlaSpe <- 
   data.frame (otu_table(ps_edgeR_glo_ASV_rel))  %>%  
   as_tibble(rownames ="ASV_ID") %>%
   pivot_longer(!ASV_ID, names_to = "sampleID", values_to = "rel_ASV_per_sample") %>% 
   left_join((tax_table(ps_edgeR_glo_ASV_rel) %>% data.frame () %>% as_tibble (rownames = "ASV_ID")), by= "ASV_ID")  %>% 
   #filter (rel_ASV_per_sample!=0)  %>% 
   left_join (meta_M1Wcontrol) %>% ## these are the relative abundances per sample
-  group_by(roots_soil, ASV_ID) %>%  # group to seperate soil from roots for each  PlaSpe , to get rel abu of ASVs per PlaSpe
+  group_by(roots_soil, PlaSpe,  ASV_ID) %>%  # group to seperate soil from roots for each  PlaSpe , to get rel abu of ASVs per PlaSpe
   summarise (mean_rel_ASV =mean(rel_ASV_per_sample)) %>% 
   filter (roots_soil =="soil") # for Soil data only
 
+rel_ASV_abundance_soil_all  <- 
+  data.frame (otu_table(ps_edgeR_glo_ASV_rel))  %>%  
+  as_tibble(rownames ="ASV_ID") %>%
+  pivot_longer(!ASV_ID, names_to = "sampleID", values_to = "rel_ASV_per_sample") %>% 
+  left_join((tax_table(ps_edgeR_glo_ASV_rel) %>% data.frame () %>% as_tibble (rownames = "ASV_ID")), by= "ASV_ID")  %>% 
+  #filter (rel_ASV_per_sample!=0)  %>% 
+  left_join (meta_M1Wcontrol) %>% ## these are the relative abundances per sample
+  group_by(roots_soil,  ASV_ID) %>%  # group to seperate soil from roots for each  PlaSpe , to get rel abu of ASVs per PlaSpe
+  summarise (mean_rel_ASV =mean(rel_ASV_per_sample)) %>% 
+  filter (roots_soil =="soil") %>% 
+  add_column ("PlaSpe" = "RelGen")
+
+
+rel_ASV_abundance_soil <- 
+  rel_ASV_abundance_soil_PlaSpe %>% rbind (rel_ASV_abundance_soil_all) 
 
 #DAA ALL ####
 #get data  for all DAA results into one tibble
 # add information on relative abundance of the ASVs per Glo community!
 # add genus label
 DAA <- 
-  bind_rows (DAA_fittest_RelGenSpec_table, DAA_fittest1_table, DAA_fittest2_table, DAA_fittest3_table, DAA_fittest4_table,
+  bind_rows (DAA_fittest1_table, DAA_fittest2_table, DAA_fittest3_table, DAA_fittest4_table,
                  DAA_fittest5_table, DAA_fittest6_table, DAA_fittest7_table, DAA_fittest8_table, DAA_fittest9_table) %>%  
  # DAA_fitBin1_table %>% 
   left_join (order_taxa %>% select (Order, GenusLabel, order), by = "GenusLabel") %>% 
@@ -450,7 +465,7 @@ plotDAA <-
   ggplot (aes (x= logFC,  y= reorder (GenusLabel, -order), color =Order, alpha = Sign, size = mean_rel_ASV)) + 
   geom_blank (data =DAA_empty_fields, mapping = aes (x= logFC, y = reorder (GenusLabel, -order) , size = mean_rel_ASV)) +  ##this adds blank data - to include All AMF that are in the tree!!
   geom_jitter(width =0.4) +  # geom_jitter
-  facet_wrap(~Gen, nrow = 1, scales = "free_x") +
+  facet_wrap(~PlaSpe, nrow = 1, scales = "free_x") +
   theme_classic() + 
   theme (axis.title.y = element_blank(),
          axis.ticks.y = element_blank(), 

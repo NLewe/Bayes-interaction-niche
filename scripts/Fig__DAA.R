@@ -9,7 +9,8 @@ ps_M1_allASVs <- readRDS ("data/ps_M1_allASVs.rds")
 ### Add a new meta column to the data
 # combination of PlaSpe and root/soil, e.g. AchMil-soil, AchMil-roots
 # for use as grouping factor in edgeR!
-ps_edgeR <- ps_M1_allASVs
+ps_edgeR <- ps_M1_allASVs %>% subset_samples(roots_soil =="soil") 
+
 
 new_sampledata <- 
   sample_data (ps_edgeR) %>% 
@@ -103,7 +104,7 @@ fit <- glmQLFit(y, design)
 #GLM F-test #####
 #compare the coefficients of the glm 
 # i.e. compare treatments
-AchMil_soil <- glmQLFTest(fit, coef=3) 
+AchMil_soil <- glmQLFTest(fit, coef=2) 
 #Soil PlaSpe results####
 # Ach Mil data soil ##
 DAA_AchMil_soil <-
@@ -116,7 +117,7 @@ DAA_AchMil_soil <-
 
 # Agr Cap soil ##
 # i.e. compare treatments
-AgrCap_soil <- glmQLFTest(fit, coef=5) 
+AgrCap_soil <- glmQLFTest(fit, coef=3) 
 
 # Ach Mil data soil
 DAA_AgrCap_soil <-
@@ -128,7 +129,7 @@ DAA_AgrCap_soil <-
   mutate (Sign = case_when(PValue<=0.05 ~ "sign.", PValue > 0.05 ~ "ns")) 
 
 ## BroWIl soil
-BroWil_soil <- glmQLFTest(fit, coef=7) 
+BroWil_soil <- glmQLFTest(fit, coef=4) 
 
 DAA_BroWil_soil <-
   BroWil_soil$table %>%  
@@ -141,7 +142,7 @@ DAA_BroWil_soil <-
 # CicInt data soil
 
 
-CicInt_soil <- glmQLFTest(fit, coef=9) 
+CicInt_soil <- glmQLFTest(fit, coef=5) 
 
 DAA_CicInt_soil <-
   CicInt_soil$table %>%  
@@ -154,7 +155,7 @@ DAA_CicInt_soil <-
 # HolLan data soil
 
 
-HolLan_soil <- glmQLFTest(fit, coef=11) 
+HolLan_soil <- glmQLFTest(fit, coef=6) 
 
 DAA_HolLan_soil <-
   HolLan_soil$table %>%  
@@ -166,7 +167,7 @@ DAA_HolLan_soil <-
 
 # PlaLan data soil
 
-PlaLan_soil <- glmQLFTest(fit, coef=13) 
+PlaLan_soil <- glmQLFTest(fit, coef=7) 
 
 DAA_PlaLan_soil <-
   PlaLan_soil$table %>%  
@@ -179,7 +180,7 @@ DAA_PlaLan_soil <-
 # PoaCit data soil
 
 
-PoaCit_soil <- glmQLFTest(fit, coef=15) 
+PoaCit_soil <- glmQLFTest(fit, coef=8) 
 
 DAA_PoaCit_soil <-
   PoaCit_soil$table %>%  
@@ -192,7 +193,7 @@ DAA_PoaCit_soil <-
 
 # SchAru data soil
 
-SchAru_soil <- glmQLFTest(fit, coef=17) 
+SchAru_soil <- glmQLFTest(fit, coef=9) 
 
 DAA_SchAru_soil <-
   SchAru_soil$table %>%  
@@ -230,6 +231,18 @@ df.tax = df.tax %>%
 taxa_names <- df.tax %>% as_tibble ()
 
 
+## check tree ##
+
+p  = ggtree(MyTree, ladderize = F) %<+% df.tax
+
+p_tree <- 
+  p +  geom_tiplab(aes(label = GenusLabel, color = Order), align = TRUE, size = 4) +
+  # geom_tippoint(aes(color= Order), size=3, show.legend = F) +
+  theme_tree2() +
+  theme (plot.margin = unit (c(8,5,6.5,5), "mm")) + 
+  xlim(NA, 0.7) +
+  theme (legend.position = "none")
+
 # Tree plot ####
 test_tree <- rotateConstr(MyTree, constraint = c("ASV_3904" ,"ASV_1540", "ASV_1320",   "ASV_1856", 
                                                  "ASV_2852","ASV_1705","ASV_1334", "ASV_550" ,
@@ -265,7 +278,7 @@ rel_ASV_abundance_soil <-
   #filter (rel_ASV_per_sample!=0)  %>% 
   left_join (meta_M1Wcontrol) %>% ## these are the relative abundances per sample
   group_by(roots_soil,PlaSpe, ASV_ID) %>%  # group to seperate soil from roots for each  PlaSpe , to get rel abu of ASVs per PlaSpe
-  summarise (mean_rel_ASV_per_PlaSpe =mean(rel_ASV_per_sample)) %>% 
+  summarise (mean_rel_ASV =mean(rel_ASV_per_sample)) %>% 
   filter (roots_soil =="soil") # for Soil data only
 
 
@@ -273,11 +286,11 @@ rel_ASV_abundance_soil <-
 #get data  for all DAA results into one tibble
 # add information on relative abundance of the ASVs per Glo community!
 # add genus label
-DAA <- bind_rows(DAA_AchMil_soil, DAA_AgrCap_soil, DAA_BroWil_soil, DAA_CicInt_soil, 
+DAA_PlaSpe <- bind_rows(DAA_AchMil_soil, DAA_AgrCap_soil, DAA_BroWil_soil, DAA_CicInt_soil, 
                  DAA_HolLan_soil, DAA_PlaLan_soil, DAA_PoaCit_soil,  DAA_SchAru_soil) %>%  
   left_join (order_taxa %>% select (Order, GenusLabel, order), by = "GenusLabel") %>% 
   left_join (rel_ASV_abundance_soil)  %>% 
-  filter (!is.na (mean_rel_ASV_per_PlaSpe))  # remove all rel abundances and logFC that have 0 abundance in the respective PlaSpe
+  filter (!is.na (mean_rel_ASV))  # remove all rel abundances and logFC that have 0 abundance in the respective PlaSpe
 
 ## make a dummy df to add a blank geom to the DAA plot (without it, some of the 
 # AMF genera are mssing in the DAA plot
@@ -289,7 +302,7 @@ DAA_empty_fields <- order_taxa %>%  add_column(logFC = 0, Sign = "ns", mean_rel_
 
 # Plot DAA ####
 plotDAA <-
-  DAA %>%   mutate (across (PlaSpe, factor, levels = c("AchMil", "CicInt", "PlaLan","PoaCit", "SchAru", "BroWil", "AgrCap", "HolLan" ))) %>% 
+  DAA_PlaSpe %>%   #mutate (across (PlaSpe, factor, levels = c("AchMil", "CicInt", "PlaLan","PoaCit", "SchAru", "BroWil", "AgrCap", "HolLan" ))) %>% 
   ggplot (aes (x= logFC,  y= reorder (GenusLabel, -order), color =Order, alpha = Sign, size = mean_rel_ASV_per_PlaSpe)) + 
   geom_blank (data =DAA_empty_fields, mapping = aes (x= logFC, y = reorder (GenusLabel, -order), size =mean_rel_ASV_per_PlaSpe)) +  ##this adds blank data - to include All AMF that are in the tree!!
   geom_jitter(width =0.4) +  # geom_jitter
@@ -308,4 +321,33 @@ plotDAA <-
 
 # Plot tree and DAA together #####
 ggarrange (p_tree, plotDAA, nrow = 1, widths = c(0.4,1))
-```
+
+
+### compare DAA generlaism and plaSpe #### 
+
+DAA %>%  add_column(model = "RelGen") %>%  bind_rows(DAA_PlaSpe %>%  add_column (model ="Plant")) %>% 
+  ggplot (aes (x = PlaSpe, y = logFC, color = model)) + 
+  geom_boxplot () 
+ #eom_point(position =  "dodge2" )
+
+
+DAA %>%  add_column(model = "RelGen") %>%  bind_rows(DAA_PlaSpe %>%  add_column (model ="Plant")) %>% 
+  ggplot (aes (x= logFC,  y= reorder (GenusLabel, -order), shape = model , 
+               color =Order, alpha = Sign, size = mean_rel_ASV)) + 
+  #geom_blank (data =DAA_empty_fields, mapping = aes (x= logFC, y = reorder (GenusLabel, -order), shape =
+   #                                                  size =mean_rel_ASV)) +  ##this adds blank data - to include All AMF that are in the tree!!
+  #geom_jitter(width =0.4) +  # geom_jitter
+  geom_point()+
+  facet_wrap(~PlaSpe , nrow =1) +
+  theme_classic() + 
+  theme (axis.title.y = element_blank(),
+         axis.ticks.y = element_blank(), 
+         axis.line.y = element_blank(),
+         axis.text.y = element_blank()) +
+  geom_vline(xintercept = 0, linetype = "dashed", color ="darkgrey") + 
+  scale_alpha_discrete(range = c(0.3, 1)) +
+  theme (legend.position = "right" ) +
+ # xlim(-9,13) +
+  labs (size = "Mean relative abundance of ASV ", color = "AMF order", alpha = "Significance")
+
+

@@ -1,16 +1,16 @@
 
 
 
-
-
 # packages ####
 library (tidyverse)
 library (tidybayes)
 library (brms)
 library(modelr)
-
-
 library (broom.mixed)
+
+
+
+
 # 0A Specify the MPD model 0####
 ## get default  priors  #### 
 prior0 <- get_prior ( AMF ~ Dim.1 + Dim.2 + Dim.3 + (1|gr(PlaSpe, cov = A)),#+ (1|PlantSpeciesfull),

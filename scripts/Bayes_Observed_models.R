@@ -153,8 +153,17 @@ pp_check (Obs_fit03, ndraws= 100) +
 # 3 Compare models #####
 
 Obs_fit03 <- add_criterion(Obs_fit03, "loo")
-loo_compare (Obs_fit02, Obs_fit03)
+loo_compare (Obs_fit02, Obs_fit03, Obs_fit01, Obs_fit0)
 ### Model 02 is the best ###
 
 
-
+dataNL %>%
+  #group_by(PlaSpe) %>%
+  #data_grid(PlaSpe = seq_range(PlaSpe, n = 51)) %>%
+  add_epred_draws(Obs_fit02) %>%
+  ggplot(aes(x = DW_roots, y = AMF, color = ordered(PlaSpe))) +
+  stat_lineribbon(aes(y = .epred)) +
+  geom_point(data = dataNL) +
+  scale_fill_brewer(palette = "Greys") +
+  scale_color_brewer(palette = "Set2") +
+  facet_wrap(~PlaSpe, scales = "free_x")

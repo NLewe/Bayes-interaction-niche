@@ -7,27 +7,34 @@ library (brms)
 library(modelr)
 
 
+# 
+data_metrics<-  
+  dataNL_sample %>% 
+  left_join (All_Metrics_E2_sample) %>%  
+  filter (!is.na (AMF))
+  
+
 library (broom.mixed)
 # 0A Specify the MPD model 0####
 ## get default  priors  #### 
-prior0 <- get_prior ( AMF ~ mpd.obs + (1|gr(PlaSpe, cov = A)),#+ (1|PlantSpeciesfull),
+prior0 <- get_prior ( AMF ~ MPD + (1|gr(PlaSpe, cov = A)) + (1|PlantSpeciesfull),
                      #+ (1+ mean_DW_roots|PlantSpeciesfull) ### hi is only needed to account for diff between the species 
                      #+ OTHEr than phylogenetic (environmental factors, niches)
-                     data = dataNL, data2 = list(A = A))
+                     data = data_metrics, data2 = list(A = A))
 
 # model 0 
 
 
 mpd_fit0 <- brm(
-  AMF ~ mpd.obs  + (1 |gr(PlaSpe, cov = A)), #+ (1|PlantSpeciesfull),
-  data = dataNL,
+  AMF ~ MPD  + (1 |gr(PlaSpe, cov = A)) + (1|PlantSpeciesfull),
+  data = data_metrics,
   family = gaussian(),
   data2 = list(A = A),
   prior = prior0,  sample_prior = TRUE, chains = 4, cores = 8,
   iter = 4000, warmup = 1000
 )
 
-control = list(adapt_delta = 0.9) ## then rerun!!
+#control = list(adapt_delta = 0.9) ## then rerun!!
 
 #The variables PlaSpe and PlantSpeciesfull are identical as they are both identifiers of the species. 
 #However, we model the phylogenetic covariance only for PlaSpe and thus the PlantSpeciesfull variable accounts for any specific effect 
@@ -75,8 +82,8 @@ pp_check (mpd_fit0, ndraws= 100) +
 #and then fit it again - adding more variables
 
 mpd_fit01 <- update(
-  mpd_fit0, formula = ~ . + DW_above ,
-  newdata = dataNL, chains = 4, cores = 8,
+  mpd_fit0, formula = ~ . -MPD + MPD:DW_roots ,
+  newdata = data_metrics, chains = 4, cores = 8,
   iter = 5000, warmup = 2000
 )
 
@@ -113,7 +120,7 @@ loo_compare (mpd_fit0, mpd_fit01)
 
 mpd_fit02 <- update(
   mpd_fit01, formula = ~ . + DW_roots - DW_above ,
-  newdata = dataNL, chains = 4, cores = 8,
+  newdata = data_metrics, chains = 4, cores = 8,
   iter = 5000, warmup = 2000
 )
 
@@ -147,7 +154,7 @@ loo_compare (mpd_fit0, mpd_fit02)
 
 mpd_fit03 <- update(
   mpd_fit02, formula = ~ .  - (1 | gr(PlaSpe, cov = A)) + (1 + DW_roots| gr(PlaSpe, cov = A)) ,
-  newdata = dataNL, chains = 4, cores = 8,
+  newdata = data_metrics, chains = 4, cores = 8,
   iter = 5000, warmup = 2000
 )
 
@@ -171,7 +178,7 @@ pp_check (mpd_fit03, ndraws= 100) +
 # 3 Compare models #####
 
 mpd_fit03 <- add_criterion(mpd_fit03, "loo")
-loo_compare (mpd_fit02, mpd_fit03)
+loo_compare (mpd_fit02, mpd_fit0, mpd_fit03)
 ### Model 02 is the best ###
 
 
@@ -184,19 +191,19 @@ sum_mpd02_B <-  tidy (mpd_fit02, effects = c("fixed"))
 ### get posteriors from the model
 
 # 
-dataNL %>%
+data_metrics %>%
   #group_by(PlaSpe) %>%
   #data_grid(PlaSpe = seq_range(PlaSpe, n = 51)) %>%
-  add_epred_draws(mpd_fit02) %>%
-  ggplot(aes(x = mpd.obs, y = AMF, color = ordered(PlaSpe))) +
+  add_epred_draws(mpd_fit01) %>%
+  ggplot(aes(x = MPD, y = AMF, color = ordered(PlaSpe))) +
   stat_lineribbon(aes(y = .epred)) +
-  geom_point(data = dataNL) +
+  geom_point(data = data_metrics) +
   scale_fill_brewer(palette = "Greys") +
   scale_color_brewer(palette = "Set2") +
   facet_wrap(~PlaSpe, scales = "free_x")
 
 
-conditional_effects(mpd_fit02, ndraws = 100, spaghetti = F, mean = T, prob = 0.5)
+conditional_effects(mpd_fit01, ndraws = 1000, spaghetti = F, mean = T, prob = 0.5)
 
 
 

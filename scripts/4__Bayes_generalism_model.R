@@ -241,7 +241,7 @@ loo_compare (Gen_samples_fit0, Gen_samples_fit07, Gen_samples_fit06, Gen_samples
 summary (Gen_samples_fit07)
 
 
-# 5A Update to model 05 ####
+#  Update to model 08 ####
 
 #and then fit it again - adding more variables
 
@@ -256,19 +256,19 @@ loo_compare (Gen_samples_fit06, Gen_samples_fit0, Gen_samples_fit08, Gen_samples
 
 
 
-# 5A Update to model 05 ####
+# 5A Update to model 09 ####
 
-# #and then fit it again - adding more variables
-# 
-# Gen_samples_fit09 <- update(
-#   Gen_samples_fit08, formula = ~ .  - DW_roots:RelGenSpec ,
-#   newdata = dataNL_sample, chains = 4, cores = 8,
-#   iter = 5000, warmup = 2000
-# )
-# 
-# Gen_samples_fit09 <- add_criterion(Gen_samples_fit09, "loo")
-# loo_compare (Gen_samples_fit0, Gen_samples_fit06, Gen_samples_fit09, Gen_samples_fit08)
-# 
+#and then fit it again - adding more variables
+
+Gen_samples_fit09 <- update(
+  Gen_samples_fit0, formula = ~ .  - DW_roots:RelGenSpec - RelGenSpec,
+  newdata = dataNL_sample, chains = 4, cores = 8,
+  iter = 5000, warmup = 2000
+)
+
+Gen_samples_fit09 <- add_criterion(Gen_samples_fit09, "loo")
+loo_compare (Gen_samples_fit0, Gen_samples_fit06, Gen_samples_fit09, Gen_samples_fit08, Gen_samples_fit05)
+
 # 
 # # 5A Update to model 05 ####
 # 
@@ -402,7 +402,7 @@ plot (conditional_effects(Gen_samples_fit05, effects = "DW_roots",  ndraws = 100
 
 #plot (conditional_effects(Gen_samples_fit04, effects = "RelGenSpec",  ndraws = 10000, spaghetti = F,  prob = 0.9, conditions = conditions2), points = T)
 
-plot (conditional_effects(Gen_samples_fit05, effects = "RelGenSpec:DW_roots",  ndraws = 10000, 
+plot (conditional_effects(Gen_samples_fit04, effects = "RelGenSpec:DW_roots",  ndraws = 10000, 
                           spaghetti = F,  prob = 0.5))
 
 
@@ -420,3 +420,4 @@ Gen_samples_fit04 <- update(
   iter = 10000, warmup = 4000
 )
 
+Gen_samples_fit04 <- add_criterion(Gen_samples_fit04, "loo")

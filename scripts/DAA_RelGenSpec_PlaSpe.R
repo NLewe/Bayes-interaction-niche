@@ -119,10 +119,6 @@ y<- calcNormFactors(y)
 y$samples$group  <- relevel (y$samples$group, ref = "SoiCon")
 design <- model.matrix (~  group + RelGenSpec  , data = y$samples)
 
-#Dispersions - GLM####
-#For general experiments (with multiple factors), edgeR uses the Cox-Reid profile-adjusted
-#likelihood (CR) method in estimating dispersions [25].
-y <- estimateDisp(y, design)
 
 
 
@@ -152,6 +148,10 @@ y <- estimateDisp(y, design)
  #  PoaCit = groupPoaCit - groupSoiCon,SchAru = groupSchAru - groupSoiCon,  
  #  levels = colnames (design)
  # )
+#Dispersions - GLM####
+#For general experiments (with multiple factors), edgeR uses the Cox-Reid profile-adjusted
+#likelihood (CR) method in estimating dispersions [25].
+y <- estimateDisp(y, design)
 
 #GLM ####
 fit <- glmQLFit(y, design)
@@ -302,6 +302,7 @@ DAA_fittest6_table <-
 # i.e. compare treatments
 DAA_fittest7_vsC <- glmQLFTest(fit, coef = 7) 
 
+
 summary(decideTests(DAA_fittest7_vsC))
 
 #Soil PlaSpe results####
@@ -349,7 +350,7 @@ DAA_fittest9_table <-
   as_tibble (rownames = "ASV_ID") %>% 
   left_join (taxa_edgeR_gen) %>% 
   filter (Phylum == "Glomeromycota" ) %>% 
-  add_column (PlaSpe = "SchAru ") %>% ### change here 
+  add_column (PlaSpe = "SchAru") %>% ### change here 
   mutate (Sign = case_when(PValue<=0.05 ~ "sign.", PValue > 0.05 ~ "ns")) %>%  
   arrange (PValue)
 
@@ -456,16 +457,13 @@ DAA <-
 # and it cannot be aligned with tree)
 DAA_empty_fields <- order_taxa %>%  add_column(logFC = 0, Sign = "ns", mean_rel_ASV = 0) 
 
-
-
-
-# Plot DAA ####
-plotDAA <-
-  DAA %>% 
+# plot only panel generalim ###
+plotDAA_gen <-
+  DAA %>% filter (PlaSpe == "RelGen")  %>% 
   ggplot (aes (x= logFC,  y= reorder (GenusLabel, -order), color =Order, alpha = Sign, size = mean_rel_ASV)) + 
   geom_blank (data =DAA_empty_fields, mapping = aes (x= logFC, y = reorder (GenusLabel, -order) , size = mean_rel_ASV)) +  ##this adds blank data - to include All AMF that are in the tree!!
   geom_jitter(width =0.4) +  # geom_jitter
-  facet_wrap(~PlaSpe, nrow = 1, scales = "free_x") +
+ # facet_wrap(~PlaSpe, nrow = 1) +#, scales = "free_x") +
   theme_classic() + 
   theme (axis.title.y = element_blank(),
          axis.ticks.y = element_blank(), 
@@ -474,7 +472,27 @@ plotDAA <-
   geom_vline(xintercept = 0, linetype = "dashed", color ="darkgrey") + 
   scale_alpha_discrete(range = c(0.3, 1)) +
   theme (legend.position = "right" ) +
- # xlim(-9,13) +
+  #xlim(-20,24) +
+  labs (size = "Mean relative abundance of ASV ", color = "AMF order", alpha = "Significance", 
+        title = "Relative interaction generalism") 
+
+
+# Plot DAA ####
+plotDAA <-
+  DAA %>% 
+  ggplot (aes (x= logFC,  y= reorder (GenusLabel, -order), color =Order, alpha = Sign, size = mean_rel_ASV)) + 
+  geom_blank (data =DAA_empty_fields, mapping = aes (x= logFC, y = reorder (GenusLabel, -order) , size = mean_rel_ASV)) +  ##this adds blank data - to include All AMF that are in the tree!!
+  geom_jitter(width =0.4) +  # geom_jitter
+  facet_wrap(~PlaSpe, nrow = 1) +#, scales = "free_x") +
+  theme_classic() + 
+  theme (axis.title.y = element_blank(),
+         axis.ticks.y = element_blank(), 
+         axis.line.y = element_blank(),
+         axis.text.y = element_blank()) +
+  geom_vline(xintercept = 0, linetype = "dashed", color ="darkgrey") + 
+  scale_alpha_discrete(range = c(0.3, 1)) +
+  theme (legend.position = "right" ) +
+ xlim(-20,24) +
   labs (size = "Mean relative abundance of ASV ", color = "AMF order", alpha = "Significance", 
         title = "RelGenSpec + PlaSpe") 
    

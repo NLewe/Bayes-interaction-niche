@@ -20,7 +20,7 @@ prior <- get_prior ( AMF ~ pd.obs + (1|gr(PlaSpe, cov = A))
 
 
 PD_fit0 <- brm(
-  AMF ~ pd.obs  + (1|gr(PlaSpe, cov = A)) ,
+  AMF ~ pd.obs  + (1|gr(PlaSpe, cov = A)) #,+ (1|PlantSpeciesfull) ,
   data = dataNL,
   family = gaussian(),
   data2 = list(A = A),
@@ -128,7 +128,7 @@ loo_compare (PD_fit0, PD_fit02)
 #and then fit it again - adding more variables
 
 PD_fit03 <- update(
-  PD_fit02, formula = ~ .  - (1 | gr(PlaSpe, cov = A)) + (1 + DW_roots| gr(PlaSpe, cov = A)) ,
+  PD_fit02, formula = ~ .  + (1 | PlantSpeciesfull)  ,
   newdata = dataNL, chains = 4, cores = 8,
   iter = 5000, warmup = 2000
 )
@@ -154,7 +154,12 @@ pp_check (PD_fit03, ndraws= 100) +
 
 PD_fit03 <- add_criterion(PD_fit03, "loo")
 loo_compare (PD_fit02, PD_fit03)
+
+loo_compare(Obs_fit0, PD_fit02)
+
 ### Model 02 is the best ###
+#model pd fit 02 is much better than observed fit 0
+
 
 
 #### Using all properties ---- they are not independent observations I guess

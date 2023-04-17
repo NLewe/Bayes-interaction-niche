@@ -98,7 +98,7 @@ y$samples$PlaSpe <- factor (sample_data (ps_edgeR_relGenSpec)$PlaSpe)
 y$samples$PlantSpeciesfull <- factor (sample_data (ps_edgeR_relGenSpec)$PlantSpeciesfull)
 y$samples$PlantFamily <- factor (sample_data (ps_edgeR_relGenSpec)$PlantFamily)
 #y$samples$Gen <- factor (sample_data (ps_edgeR_relGenSpec)$Gen)
-y$samples$Richness <-  sample_data (ps_edgeR_relGenSpec)$Richness
+y$samples$PD <-  sample_data (ps_edgeR_relGenSpec)$PD
 
 
 DAA_dim_before_filter <- dim(y)
@@ -118,7 +118,7 @@ y<- calcNormFactors(y)
 #are monopolizing the sequencing, causing the counts for other genes to be lower than would
 #be usual given the library size.
 y$samples$group  <- relevel (y$samples$group, ref = "SoiCon")
-design <- model.matrix (~  group + Richness  , data = y$samples)
+design <- model.matrix (~  group + PD  , data = y$samples)
 
 #Dispersions - GLM####
 #For general experiments (with multiple factors), edgeR uses the Cox-Reid profile-adjusted
@@ -191,7 +191,7 @@ DAA_fittest2_table <-
   as_tibble (rownames = "ASV_ID") %>% 
   left_join (taxa_edgeR_gen) %>% 
   filter (Phylum == "Glomeromycota" ) %>% 
-  add_column (PlaSpe = "Richness") %>% ### change here 
+  add_column (PlaSpe = "PD") %>% ### change here 
   mutate (Sign = case_when(PValue<=0.05 ~ "sign.", PValue > 0.05 ~ "ns")) %>%  
   arrange (PValue)
 
@@ -436,7 +436,7 @@ rel_ASV_abundance_soil_all  <-
   group_by(roots_soil,  ASV_ID) %>%  # group to seperate soil from roots for each  PlaSpe , to get rel abu of ASVs per PlaSpe
   summarise (mean_rel_ASV =mean(rel_ASV_per_sample)) %>% 
   filter (roots_soil =="soil") %>% 
-  add_column ("PlaSpe" = "Richness")
+  add_column ("PlaSpe" = "PD")
 
 
 rel_ASV_abundance_soil <- 
@@ -479,7 +479,7 @@ plotDAA <-
   theme (legend.position = "right" ) +
   # xlim(-9,13) +
   labs (size = "Mean relative abundance of ASV ", color = "AMF order", alpha = "Significance", 
-        title = "Richness + PlaSpe") 
+        title = "PD + PlaSpe") 
 
 
 

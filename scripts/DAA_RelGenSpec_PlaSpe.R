@@ -33,6 +33,15 @@ ps_edgeR_relGenSpec <- ps_M1_allASVs %>% subset_samples(roots_soil =="soil") #%>
 ps_edgeR_relGenSpec<- prune_taxa(taxa_sums (ps_edgeR_relGenSpec)>1,ps_edgeR_relGenSpec)
 
 
+corrected_taxTable <- 
+  read_csv ("results/testtableTaxonomy.csv") %>% 
+  data.frame (row.names = "ASV_ID") %>%  as.matrix() %>%   tax_table ()
+
+
+# add corrected taxa data tp ps object ####
+
+tax_table(ps_edgeR_relGenSpec) <- corrected_taxTable
+
 
 # prep sample data - information of ID needed
 test2 <- 
@@ -79,7 +88,7 @@ taxa_edgeR_gen <-
   tax_table (ps_edgeR_relGenSpec) %>% 
   data.frame () %>%  
   mutate(GenusLabel = ifelse(!is.na(Genus), paste(Genus), 
-                             ifelse(!is.na(Family), paste('Unid. ', Family, sep = ""), 
+                             ifelse(!is.na(Family), paste( Family, ' sp.', sep = ""), 
                                     ifelse(!is.na(Order), paste('Unid. ', Order, sep = ""),
                                            ifelse(!is.na(Class), paste('Unid. ', Class, sep = ""), paste("Unid. ", Phylum, sep = "")))))) %>% 
   as_tibble (rownames = "ASV_ID" ) %>%  
@@ -378,7 +387,7 @@ df.tax <-  df.tax  %>% mutate( TaxLabel = paste(Family, Genus, sep = "_")) %>%
 # Change the NA in the taxon table to the nearest identified taxon
 df.tax = df.tax %>%
   mutate(GenusLabel = ifelse(!is.na(Genus), paste(Genus), 
-                             ifelse(!is.na(Family), paste('Unid. ', Family, sep = ""), 
+                             ifelse(!is.na(Family), paste( Family, ' sp.', sep = ""), 
                                     ifelse(!is.na(Order), paste('Unid. ', Order, sep = ""),
                                            ifelse(!is.na(Class), paste('Unid. ', Class, sep = ""), paste("Unid. ", Phylum, sep = "")))))) 
 

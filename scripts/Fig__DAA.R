@@ -326,18 +326,21 @@ ggarrange (p_tree, plotDAA, nrow = 1, widths = c(0.4,1))
 ### compare DAA generlaism and plaSpe #### 
 
 DAA %>%  add_column(model = "RelGen") %>%  bind_rows(DAA_PlaSpe %>%  add_column (model ="Plant")) %>% 
+  filter (PlaSpe != "RelGen") %>% 
   ggplot (aes (x = PlaSpe, y = logFC, color = model)) + 
-  geom_boxplot () 
+  geom_boxplot () +
+  facet_wrap(~Family) +
+  theme_classic()
  #eom_point(position =  "dodge2" )
 
 
 DAA %>%  add_column(model = "RelGen") %>%  bind_rows(DAA_PlaSpe %>%  add_column (model ="Plant")) %>% 
-  ggplot (aes (x= logFC,  y= reorder (GenusLabel, -order), shape = model , 
-               color =Order, alpha = Sign, size = mean_rel_ASV)) + 
+  ggplot (aes (x= logFC,  y= reorder (GenusLabel, -order), color = model , 
+               shape =Order, alpha = Sign, size = mean_rel_ASV)) + 
   #geom_blank (data =DAA_empty_fields, mapping = aes (x= logFC, y = reorder (GenusLabel, -order), shape =
    #                                                  size =mean_rel_ASV)) +  ##this adds blank data - to include All AMF that are in the tree!!
-  #geom_jitter(width =0.4) +  # geom_jitter
-  geom_point()+
+  geom_jitter(width =0.4) +  # geom_jitter
+  #geom_point()+
   facet_wrap(~PlaSpe , nrow =1) +
   theme_classic() + 
   theme (axis.title.y = element_blank(),

@@ -23,14 +23,34 @@ plot_radar_E1<-
           plot.title = "Experiment 1")
 
 plot_radar_E2 <- 
-All_metrics_E2 %>%  ungroup () %>% 
+  All_metrics_E2 %>%  ungroup () %>% 
   select (-PlantFamily, -Exp) %>% 
   mutate(across(!c(PlantSpeciesfull,`β(core)`, CU), rescale)) %>% ### achtung,`β(core)` aus de Berechnung genommen da es schon auf o bis 1 scala ist
   mutate (`β(core)` = `β(core)`/100) %>% 
-  ggradar(legend.title = "Plant species", plot.title = "Experiment 2") 
+  ggradar(legend.title = "Plant species", plot.title = "Experiment 2", 
+          background.circle.colour = "white",
+          background.circle.transparency = 0, 
+          axis.line.colour = "grey30", 
+          gridline.min.colour = "grey30",
+          gridline.mid.colour = "grey30",
+          gridline.max.colour = "grey30")
+
+
+
 
 
 ggarrange (plot_radar_E1, plot_radar_E2, common.legend = T, legend = "bottom", label = "AUTO")
+
+extra <- tribble (~PlantSpeciesfull, ~Shannon, ~Richness, ~uniqueASV, ~CU, ~`β(core)`, ~PD, ~MPD, "leer", 0, 0, 0, 0, 0, 0, 0 )
+radar_empty  <- ggradar(extra,          background.circle.colour = "white",
+                        background.circle.transparency = 0, 
+                        axis.line.colour = "grey30", 
+                        gridline.min.colour = "grey30",
+                        gridline.mid.colour = "grey30",
+                        gridline.max.colour = "grey30", 
+                        group.line.width=0, 
+                        grid.label.size = 5,
+                        group.point.size	=0)
 
 # radar plot for each plant species ######
 radar_plots <- 
@@ -45,14 +65,24 @@ radar_plots <-
    # select (!uniqueASV) %>% 
   group_split(PlantSpeciesfull) %>% 
   map (~select (., -PlantSpeciesfull) %>% relocate (Exp)) %>% 
-  map (~ggradar(.,)) 
+  map (~ggradar(.,          background.circle.colour = "white",
+                background.circle.transparency = 0, 
+                axis.line.colour = "grey30", 
+                gridline.min.colour = "grey30",
+                gridline.mid.colour = "grey30",
+                gridline.max.colour = "grey30",
+                values.radar = c(" ", " ", " "),
+                axis.labels = c("", "","", " ", "", "", "")))
 
 
-ggarrange (radar_plots[[1]], radar_plots[[2]], radar_plots[[3]], radar_plots[[4]], 
+ggarrange (NULL, radar_plots[[1]], radar_plots[[2]], radar_plots[[3]], radar_plots[[4]], 
            radar_plots[[5]], radar_plots[[6]], radar_plots[[7]], radar_plots[[8]], 
-           labels = c("A. capillaris", "A. millefolium", "B. willdenowii", "C. intybus", 
+           labels = c("", "A. capillaris", "A. millefolium", "B. willdenowii", "C. intybus", 
                       "H. lanatus", "P. cita", "P. lanceolata", "S. arundinaceus"),
-           common.legend = T, nrow = 2, ncol=4)
+           font.label = list (face = "italic"),
+           common.legend = T, nrow = 3, ncol=3)
+
+
 
 # sorted for generalism according to table below
 ggarrange (radar_plots[[5]], radar_plots[[8]], radar_plots[[7]], radar_plots[[1]], 

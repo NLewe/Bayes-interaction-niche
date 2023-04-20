@@ -12,6 +12,33 @@ ps_M1_allASVs <- readRDS ("data/ps_M1_allASVs.rds")
 ps_edgeR <- ps_M1_allASVs %>% subset_samples(roots_soil =="soil") 
 
 
+
+# include better identification of taxa##
+# check ASVs not identified at family level on UNITE database#
+
+# use tsv  file, copy sequence, blast on UNITE 
+
+# tax_table (ps_edgeR) %>%  
+#   data.frame () %>%  
+#   as_tibble (rownames = "ASV_ID") %>% 
+#   write_csv ("results/testtableTaxonomy.csv")
+
+
+# used blast to identify the following  AVs
+#386, 1320, 1484, 1541, 1106 , added the result to csv table
+
+
+corrected_taxTable <- 
+  read_csv ("results/testtableTaxonomy.csv") %>% 
+  data.frame (row.names = "ASV_ID") %>%  as.matrix() %>%   tax_table ()
+
+
+# add corrected taxa data tp ps object ####
+
+tax_table(ps_edgeR) <- corrected_taxTable
+
+
+## add sample data
 new_sampledata <- 
   sample_data (ps_edgeR) %>% 
   data.frame () %>% 
@@ -37,11 +64,12 @@ taxa_edgeR <-
   tax_table (ps_edgeR) %>% 
   data.frame () %>%  
   mutate(GenusLabel = ifelse(!is.na(Genus), paste(Genus), 
-                             ifelse(!is.na(Family), paste('Unid. ', Family, sep = ""), 
+                             ifelse(!is.na(Family), paste( Family, ' sp.',  sep = ""), 
                                     ifelse(!is.na(Order), paste('Unid. ', Order, sep = ""),
                                            ifelse(!is.na(Class), paste('Unid. ', Class, sep = ""), paste("Unid. ", Phylum, sep = "")))))) %>% 
   as_tibble (rownames = "ASV_ID" ) %>%  
   select (ASV_ID, GenusLabel,Phylum, Class, Family, Genus)
+
 
 ## Grouping : PlaSpe in roots and PlaSpe in soil = 16 treatments
 group = factor (sample_data (ps_edgeR)$PlaSpe_RS)
@@ -223,14 +251,14 @@ df.tax <-  df.tax  %>% mutate( TaxLabel = paste(Family, Genus, sep = "_")) %>%
 # Change the NA in the taxon table to the nearest identified taxon
 df.tax = df.tax %>%
   mutate(GenusLabel = ifelse(!is.na(Genus), paste(Genus), 
-                             ifelse(!is.na(Family), paste('Unid. ', Family, sep = ""), 
+                             ifelse(!is.na(Family), paste( Family,' sp.', sep = ""), 
                                     ifelse(!is.na(Order), paste('Unid. ', Order, sep = ""),
                                            ifelse(!is.na(Class), paste('Unid. ', Class, sep = ""), paste("Unid. ", Phylum, sep = "")))))) 
 
 # get a tibble of the whole taxa table incl new GenusLabel
 taxa_names <- df.tax %>% as_tibble ()
 
-
+library (ggtree)
 ## check tree ##
 
 p  = ggtree(MyTree, ladderize = F) %<+% df.tax
@@ -324,11 +352,16 @@ ggarrange (p_tree, plotDAA, nrow = 1, widths = c(0.4,1))
 
 
 ### compare DAA generlaism and plaSpe #### 
-
-DAA %>%  add_column(model = "RelGen") %>%  bind_rows(DAA_PlaSpe %>%  add_column (model ="Plant")) %>% 
+ #Boxplot ####
+DAA %>%  add_column(model = "RelGen") %>% 
+  bind_rows(DAA_PlaSpe %>%  add_column (model ="Plant")) %>% 
+  filter (!is.na (Family)) %>% 
   filter (PlaSpe != "RelGen") %>% 
-  ggplot (aes (x = PlaSpe, y = logFC, color = model)) + 
+  left_join (meta_plants) %>% 
+  #filter (Sign == "sign.") %>% 
+  ggplot (aes (x = PlantSpeciesfull, y = logFC, color = model)) + 
   geom_boxplot () +
+  #geom_point () +
   facet_wrap(~Family) +
   theme_classic()
  #eom_point(position =  "dodge2" )

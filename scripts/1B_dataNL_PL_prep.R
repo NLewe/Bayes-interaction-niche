@@ -35,7 +35,9 @@ PLFA_Soil <-
   pivot_wider(names_from = Biom2Soil, values_from = group ) %>% 
   mutate (totalPLFA = Actinobacteria +AMF+ bacteria+Fungi+gram.neg+gram.pos) %>% 
   mutate  (RatioFtoB  = (AMF +Fungi)/(bacteria + gram.neg + gram.pos + Actinobacteria)) %>% 
-  mutate (GPtoGN = gram.pos / gram.neg)
+  mutate (GPtoGN = gram.pos / gram.neg) %>% 
+  mutate (totalBact = Actinobacteria + bacteria+gram.neg+gram.pos)
+  
   
 # Nl and PLFa data in one tibble ###
 dataNLPL <- 

@@ -30,6 +30,7 @@ ps_M1_allASVs <- readRDS ("data/ps_M1_allASVs.rds")
 # for use as grouping factor in edgeR!
 ps_edgeR_relGenSpec <- ps_M1_allASVs %>% subset_samples(roots_soil =="soil") #%>%  subset_samples (PlaSpe != "SoiCon")
 
+
 ps_edgeR_relGenSpec<- prune_taxa(taxa_sums (ps_edgeR_relGenSpec)>1,ps_edgeR_relGenSpec)
 
 
@@ -369,10 +370,13 @@ DAA_fittest9_table <-
 
 ## Subset the genus level data  for Glo
 ps_edgeR_glo_genus <- subset_taxa(ps_edgeR_genus, Phylum == "Glomeromycota")
-ps_edgeR_glo_genus <- prune_taxa (taxa_sums(ps_edgeR_glo_genus)>=1, ps_edgeR_glo_genus)
+ps_edgeR_glo_genus <- prune_taxa (taxa_sums(ps_edgeR_glo_genus)>=1, 
+                                  ps_edgeR_glo_genus) %>%  
+  taxa_prune("ASV_3007")
 
 # get the tree data
 MyTree <-    ps_edgeR_glo_genus %>% phy_tree
+
 
 # Save names of taxa in tree
 TreeTax <-  taxa_names(ps_edgeR_glo_genus)
@@ -395,11 +399,14 @@ df.tax = df.tax %>%
 taxa_names <- df.tax %>% as_tibble ()
 
 library (ape)
+
 # Tree plot ####
-test_tree <- rotateConstr(MyTree, constraint = c("ASV_3904" ,"ASV_1540", "ASV_1320",   "ASV_1856", 
-                                                 "ASV_2852","ASV_1705","ASV_1334", "ASV_550" ,
-                                                 "ASV_270","ASV_386",  "ASV_662" , "ASV_988" , 
-                                                 "ASV_247" , "ASV_713"  , "ASV_357", "ASV_253" ,  "ASV_14" ,   "ASV_3003"))
+test_tree <- rotateConstr(MyTree, constraint = c("ASV_3904" , "ASV_3003", "ASV_3844" ,
+                                                 "ASV_14" , "ASV_713"  ,"ASV_357",
+                                                 "ASV_988", "ASV_247","ASV_386", "ASV_1106" , 
+                                                 "ASV_270", "ASV_550", "ASV_1334", 
+                                                 "ASV_978",    "ASV_2852", 
+                                                  "ASV_1320","ASV_1540"))
 
 p  = ggtree(test_tree, ladderize = F) %<+% df.tax
 
@@ -416,7 +423,7 @@ order_taxa <- get_taxa_name(p) %>%
   as_tibble () %>% 
   dplyr::rename ("ASV_ID" = "value") %>%  
   left_join (taxa_names) %>% 
-  add_column (order = c(1:18))
+  add_column (order = c(1:17))
 
 # get relative abundances for the ASVs for later use in the DAA plot
 ps_edgeR_glo_ASV <- subset_taxa(ps_edgeR_relGenSpec, Phylum == "Glomeromycota")
@@ -475,7 +482,7 @@ plotDAA_gen <-
  # facet_wrap(~PlaSpe, nrow = 1) +#, scales = "free_x") +
   theme_classic() + 
   theme (axis.title.y = element_blank(),
-         axis.ticks.y = element_blank(), 
+         axis.ticks.y = element_blank(),
          axis.line.y = element_blank(),
          axis.text.y = element_blank()) +
   geom_vline(xintercept = 0, linetype = "dashed", color ="darkgrey") + 
@@ -508,5 +515,5 @@ plotDAA <-
 
 
 # Plot tree and DAA together #####
-# ggarrange (p_tree, plotDAA, nrow = 1, widths = c(0.4,1))
+ggarrange (p_tree, plotDAA_gen, nrow = 1, widths = c(0.6,1))
 

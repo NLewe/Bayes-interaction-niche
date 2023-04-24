@@ -89,9 +89,9 @@ taxa_edgeR_gen <-
   tax_table (ps_edgeR_relGenSpec) %>% 
   data.frame () %>%  
   mutate(GenusLabel = ifelse(!is.na(Genus), paste(Genus), 
-                             ifelse(!is.na(Family), paste( Family, ' sp.', sep = ""), 
-                                    ifelse(!is.na(Order), paste('Unid. ', Order, sep = ""),
-                                           ifelse(!is.na(Class), paste('Unid. ', Class, sep = ""), paste("Unid. ", Phylum, sep = "")))))) %>% 
+                             ifelse(!is.na(Family), paste('unid. ', Family,  sep = ""), 
+                                    ifelse(!is.na(Order), paste('unid. ', Order, sep = ""),
+                                           ifelse(!is.na(Class), paste('unid. ', Class, sep = ""), paste("unid. ", Phylum, sep = "")))))) %>% 
   as_tibble (rownames = "ASV_ID" ) %>%  
   select (ASV_ID, GenusLabel,Phylum, Class, Family, Genus)
 
@@ -391,9 +391,9 @@ df.tax <-  df.tax  %>% mutate( TaxLabel = paste(Family, Genus, sep = "_")) %>%
 # Change the NA in the taxon table to the nearest identified taxon
 df.tax = df.tax %>%
   mutate(GenusLabel = ifelse(!is.na(Genus), paste(Genus), 
-                             ifelse(!is.na(Family), paste( Family, ' sp.', sep = ""), 
-                                    ifelse(!is.na(Order), paste('Unid. ', Order, sep = ""),
-                                           ifelse(!is.na(Class), paste('Unid. ', Class, sep = ""), paste("Unid. ", Phylum, sep = "")))))) 
+                             ifelse(!is.na(Family), paste('unid. ', Family, sep = ""), 
+                                    ifelse(!is.na(Order), paste('unid. ', Order, sep = ""),
+                                           ifelse(!is.na(Class), paste('unid. ', Class, sep = ""), paste("unid. ", Phylum, sep = "")))))) 
 
 # get a tibble of the whole taxa table incl new GenusLabel
 taxa_names <- df.tax %>% as_tibble ()

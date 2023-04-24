@@ -1,7 +1,9 @@
-
+# packages s####
 library (edgeR)
 library (phyloseq)
 library (tidyverse)
+library(RVAideMemoire)
+library (ggpubr)
 
 ##data 
 ps_M1_allASVs <- readRDS ("data/ps_M1_allASVs.rds")
@@ -259,6 +261,7 @@ df.tax = df.tax %>%
 taxa_names <- df.tax %>% as_tibble ()
 
 library (ggtree)
+library (ape)
 ## check tree ##
 
 p  = ggtree(MyTree, ladderize = F) %<+% df.tax
@@ -323,7 +326,7 @@ DAA_PlaSpe <- bind_rows(DAA_AchMil_soil, DAA_AgrCap_soil, DAA_BroWil_soil, DAA_C
 ## make a dummy df to add a blank geom to the DAA plot (without it, some of the 
 # AMF genera are mssing in the DAA plot
 # and it cannot be aligned with tree)
-DAA_empty_fields <- order_taxa %>%  add_column(logFC = 0, Sign = "ns", mean_rel_ASV_per_PlaSpe = 0) 
+DAA_empty_fields <- order_taxa %>%  add_column(logFC = 0, Sign = "ns", mean_rel_ASV = 0) 
 
 
 
@@ -358,13 +361,37 @@ DAA %>%  add_column(model = "RelGen") %>%
   filter (!is.na (Family)) %>% 
   filter (PlaSpe != "RelGen") %>% 
   left_join (meta_plants) %>% 
+  select (!order) %>% 
+  left_join (order_taxa %>%  select (GenusLabel, order)) %>% 
   #filter (Sign == "sign.") %>% 
   ggplot (aes (x = PlantSpeciesfull, y = logFC, color = model)) + 
   geom_boxplot () +
   #geom_point () +
-  facet_wrap(~Family) +
-  theme_classic()
+  facet_wrap(~ reorder (GenusLabel, order), nrow = 3 )+
+  theme_classic() +
+  theme (axis.text.x = element_text (face ="italic", angle = 45, hjust =1 )) 
+  
  #eom_point(position =  "dodge2" )
+
+
+# t tests for the boxplots ###
+
+Perm_DAA_boxplot_tTest <- 
+DAA %>%  add_column(model = "RelGen") %>% 
+  bind_rows(DAA_PlaSpe %>%  add_column (model ="Plant")) %>% 
+  filter (!is.na (GenusLabel)) %>% 
+  filter (Family!= "Diversisporaceae") %>% 
+  filter (PlaSpe != "RelGen") %>% 
+  left_join (meta_plants) %>%  
+  group_split(PlantSpeciesfull, GenusLabel) %>% 
+  map (~unite (.,"PlaSpe_Genus", PlaSpe, GenusLabel, sep= "_", remove = F  )) %>% 
+  purrr::set_names(purrr::map_chr(., ~.x$PlaSpe_Genus[1])) %>% 
+  map (~perm.t.test (.$logFC ~ .$model, nperm= 9999, paired = T, .id = .$PlaSpe_Genus)) 
+
+#%>% 
+Perm_DAA_boxplot_tTest %>% map_dbl ("p.value")
+
+
 
 
 DAA %>%  add_column(model = "RelGen") %>%  bind_rows(DAA_PlaSpe %>%  add_column (model ="Plant")) %>% 

@@ -12,6 +12,11 @@ library (brms)
 library(modelr)
 library (broom.mixed)
 
+# https://cran.r-project.org/web/packages/tidybayes/vignettes/tidy-brms.html
+
+# https://mc-stan.org/loo/articles/online-only/faq.html
+
+
 # data 
 PCA_metric_data_sample <- readRDS ("results/PCA_metric_data_sample.rds")
 
@@ -68,7 +73,7 @@ hyp0
 ### means we ahave a phylogenetc signal 
 plot (hyp0)
 
-# 0B check sampling quality of model 0 ####
+#  check sampling quality of model 0 ###
 
 # Look for rhat, ESS, Sd etc
 summary (Gen_samples_fit0)
@@ -83,7 +88,7 @@ pp_check (Gen_samples_fit0, ndraws= 100) +
 
 
 
-# 1A Update to model 01 ####
+# 1 Update to model 01 ####
 
 #and then fit it again - adding more variables
 
@@ -93,10 +98,14 @@ Gen_samples_fit01 <- update(
   iter = 5000, warmup = 2000
 )
 
+Gen_samples_fit01B <- update(
+  Gen_samples_fit0, formula = ~ . - (1|PlantSpeciesfull) ,
+  newdata = dataNL_sample, chains = 4, cores = 8,
+  iter = 5000, warmup = 2000
+)
 
 
-
-# 1B check sampling quality of model 01 ####
+#  check sampling quality of model 01 ##
 
 # Look for rhat, ESS, Sd etc
 summary (Gen_samples_fit01)
@@ -109,17 +118,19 @@ launch_shinystan(Gen_samples_fit01)
 pp_check (Gen_samples_fit01, ndraws= 100) +
   xlab ("AMF biomass in soil")
 
-# 3 Compare models #####
+# 3 Compare models ###
 Gen_samples_fit0 <- add_criterion(Gen_samples_fit0, "loo")
 
 Gen_samples_fit01 <- add_criterion(Gen_samples_fit01, "loo")
-loo_compare (Gen_samples_fit0, Gen_samples_fit01)
+Gen_samples_fit01B <- add_criterion(Gen_samples_fit01B, "loo")
+
+loo_compare (Gen_samples_fit0, Gen_samples_fit01, Gen_samples_fit01B, Gen_samples_fit02, Gen_samples_fit03, Gen_samples_fit04, Gen_samples_fit05)
 # best performing model will be named at top
 #
 
 
 
-# 2A Update to model 02 ####
+# 2 Update to model 02 ####
 
 #and then fit it again - adding more variables
 
@@ -130,10 +141,7 @@ Gen_samples_fit02 <- update(
 )
 
 
-
-
-
-# 2B check sampling quality of model 02 ####
+#  check sampling quality of model 02 ###
 
 # Look for rhat, ESS, Sd etc
 summary (Gen_samples_fit02)
@@ -146,7 +154,7 @@ launch_shinystan(Gen_samples_fit02)
 pp_check (Gen_samples_fit02, ndraws= 100) +
   xlab ("AMF biomass in soil")
 
-# 3 Compare models #####
+# 3 Compare models ###
 
 Gen_samples_fit02 <- add_criterion(Gen_samples_fit02, "loo")
 loo_compare (Gen_samples_fit0, Gen_samples_fit01, Gen_samples_fit02)
@@ -154,8 +162,7 @@ loo_compare (Gen_samples_fit0, Gen_samples_fit01, Gen_samples_fit02)
 
 
 
-
-# 4 Update to model 04 ####
+# 3 Update to model 03 ####
 Gen_samples_fit03 <- update(
   Gen_samples_fit0, formula = ~ .  -  RelGenSpec:DW_roots ,
   newdata = dataNL_sample, chains = 4, cores = 8,
@@ -169,6 +176,9 @@ loo_compare (Gen_samples_fit0,  Gen_samples_fit01,
 
 # Look for rhat, ESS, Sd etc
 summary (Gen_samples_fit03)
+
+# 4 Update to model 04 ####
+
 #and then fit it again - adding more variables
 
 Gen_samples_fit04 <- update(
@@ -186,7 +196,7 @@ loo_compare (Gen_samples_fit0,  Gen_samples_fit01,
 # Look for rhat, ESS, Sd etc
 summary (Gen_samples_fit04)
 
-# 5A Update to model 05 ####
+# 5 Update to model 05 ####
 
 #and then fit it again - adding more variables
 
@@ -204,18 +214,83 @@ loo_compare (Gen_samples_fit0,  Gen_samples_fit05, Gen_samples_fit04,
 # Look for rhat, ESS, Sd etc
 summary (Gen_samples_fit05)
 
+# 5B Update to model 05B ####
+
+#and then fit it again - adding more variables
+
+Gen_samples_fit05B <- update(
+  Gen_samples_fit05, formula = ~ . -  RelGenSpec*DW_roots + RelGenSpec,
+  newdata = dataNL_sample, chains = 4, cores = 8,
+  iter = 5000, warmup = 2000
+)
+
+Gen_samples_fit05B <- add_criterion(Gen_samples_fit05B, "loo")
+loo_compare (Gen_samples_fit05B,  Gen_samples_fit05, Gen_samples_fit04, 
+             Gen_samples_fit03)
+
+
+# Look for rhat, ESS, Sd etc
+summary (Gen_samples_fit05B)
+
+
+# 5c Update to model 05C ####
+
+#and then fit it again - adding more variables
+
+Gen_samples_fit05C <- update(
+  Gen_samples_fit05B, formula = ~ .  + DW_roots,
+  newdata = dataNL_sample, chains = 4, cores = 8,
+  iter = 5000, warmup = 2000
+)
+
+Gen_samples_fit05C <- add_criterion(Gen_samples_fit05C, "loo")
+loo_compare (Gen_samples_fit0,  Gen_samples_fit05, Gen_samples_fit05B, 
+             Gen_samples_fit05C, Gen_samples_fit03)
+
+
+# Look for rhat, ESS, Sd etc
+summary (Gen_samples_fit05)
+
+# 5c Update to model 05C ####
+
+#and then fit it again - adding more variables
+
+Gen_samples_fit05D <- update(
+  Gen_samples_fit05B, formula = ~ .  + (1|PlantSpeciesfull),
+  newdata = dataNL_sample, chains = 4, cores = 8,
+  iter = 5000, warmup = 2000
+)
+
+Gen_samples_fit05D <- add_criterion(Gen_samples_fit05D, "loo")
+
+Gen_samples_fit05B <- add_criterion(Gen_samples_fit05B, "waic")
+Gen_samples_fit05D <- add_criterion(Gen_samples_fit05D, "waic")
+
+Gen_samples_fit05C <- add_criterion(Gen_samples_fit05C, "waic")
+loo_compare (Gen_samples_fit05D,  Gen_samples_fit05, Gen_samples_fit05B, 
+             Gen_samples_fit05C, Gen_samples_fit03)
+
+loo_compare (Gen_samples_fit05D,  Gen_samples_fit05B, 
+             Gen_samples_fit05C,criterion = "waic")
+
+
+# Look for rhat, ESS, Sd etc
+summary (Gen_samples_fit05D)
+
+
+
 # 6 Update to model 06 ####
 
 #and then fit it again - adding more variables
 
 Gen_samples_fit06 <- update(
-  Gen_samples_fit04, formula = ~ .   + DW_above ,
+  Gen_samples_fit05, formula = ~ .   + DW_above ,
   newdata = dataNL_sample, chains = 4, cores = 8,
   iter = 5000, warmup = 2000
 )
 
 Gen_samples_fit06 <- add_criterion(Gen_samples_fit06, "loo")
-loo_compare (Gen_samples_fit0, Gen_samples_fit05, Gen_samples_fit06, Gen_samples_fit04)
+loo_compare (Gen_samples_fit02, Gen_samples_fit05, Gen_samples_fit06, Gen_samples_fit05B)
 
 
 # Look for rhat, ESS, Sd etc
@@ -227,91 +302,92 @@ summary (Gen_samples_fit06)
 #and then fit it again - adding more variables
 
 Gen_samples_fit07 <- update(
-  Gen_samples_fit04, formula = ~ .   + DW_roots:DW_above,
+  Gen_samples_fit05B, formula = ~ .   + RelGenSpec:DW_above,
   newdata = dataNL_sample, chains = 4, cores = 8,
   iter = 5000, warmup = 2000
 )
 
 Gen_samples_fit07 <- add_criterion(Gen_samples_fit07, "loo")
-loo_compare (Gen_samples_fit0, Gen_samples_fit07, Gen_samples_fit06, Gen_samples_fit04)
+loo_compare (Gen_samples_fit0, Gen_samples_fit07, Gen_samples_fit06, Gen_samples_fit05B)
 
-# 3B check sampling quality of model 03 ####
+#  check sampling quality of model  ###
 
 # Look for rhat, ESS, Sd etc
 summary (Gen_samples_fit07)
 
 
-#  Update to model 08 ####
+# 8 Update to model 08 ####
 
 #and then fit it again - adding more variables
 
 Gen_samples_fit08 <- update(
-  Gen_samples_fit04, formula = ~ .  + RelGenSpec:DW_above ,
+  Gen_samples_fit05B, formula = ~ . -RelGenSpec + RelGenSpec:DW_above ,
   newdata = dataNL_sample, chains = 4, cores = 8,
   iter = 5000, warmup = 2000
 )
 
 Gen_samples_fit08 <- add_criterion(Gen_samples_fit08, "loo")
-loo_compare (Gen_samples_fit06, Gen_samples_fit0, Gen_samples_fit08, Gen_samples_fit04)
+loo_compare (Gen_samples_fit06, Gen_samples_fit04, Gen_samples_fit08, Gen_samples_fit05B, Gen_samples_fit07)
 
 
 
-# 5A Update to model 09 ####
+# 9 Update to model 09 ####
 
 #and then fit it again - adding more variables
 
 Gen_samples_fit09 <- update(
-  Gen_samples_fit0, formula = ~ .  - DW_roots:RelGenSpec - RelGenSpec,
+  Gen_samples_fit07, formula = ~ .  + DW_above,
   newdata = dataNL_sample, chains = 4, cores = 8,
   iter = 5000, warmup = 2000
 )
 
 Gen_samples_fit09 <- add_criterion(Gen_samples_fit09, "loo")
-loo_compare (Gen_samples_fit0, Gen_samples_fit06, Gen_samples_fit09, Gen_samples_fit08, Gen_samples_fit05)
+loo_compare (Gen_samples_fit04, Gen_samples_fit05B, Gen_samples_fit09, Gen_samples_fit08, Gen_samples_fit05)
 
 # 
-# # 5A Update to model 05 ####
+# 10 Update to model 10 ####
+
+#and then fit it again - adding more variables
+
+Gen_samples_fit10 <- update(
+  Gen_samples_fit08, formula = ~ .  + (1|PlantSpeciesfull) ,
+  newdata = dataNL_sample, chains = 4, cores = 8,
+  iter = 5000, warmup = 2000
+)
+
+Gen_samples_fit10 <- add_criterion(Gen_samples_fit10, "loo")
+loo_compare (Gen_samples_fit08, Gen_samples_fit10, Gen_samples_fit05C, Gen_samples_fit05B)
+
+
+# 11 Update to model 11 ####
+
+Gen_samples_fit11 <- update(
+  Gen_samples_fit10, formula = ~ .  + RelGenSpec + DW_above - RelGenSpec:DW_above,
+  newdata = dataNL_sample, chains = 4, cores = 8,
+  iter = 5000, warmup = 2000
+)
+
+Gen_samples_fit11 <- add_criterion(Gen_samples_fit11, "loo")
+loo_compare (Gen_samples_fit05B, Gen_samples_fit10, Gen_samples_fit05C, Gen_samples_fit11)
 # 
-# #and then fit it again - adding more variables
+# 12 Update to model 12 ####
+Gen_samples_fit12 <- update(
+  Gen_samples_fit03, formula = ~ .  - RelGenSpec - DW_roots + RelGenSpec:DW_roots:DW_above ,
+  newdata = dataNL_sample, chains = 4, cores = 8,
+  iter = 5000, warmup = 2000
+)
+
+Gen_samples_fit12 <- add_criterion(Gen_samples_fit12, "loo")
+loo_compare (Gen_samples_fit05C, Gen_samples_fit10, Gen_samples_fit05B, Gen_samples_fit12)
 # 
-# Gen_samples_fit10 <- update(
-#   Gen_samples_fit08, formula = ~ .  - DW_above:DW_roots ,
-#   newdata = dataNL_sample, chains = 4, cores = 8,
-#   iter = 5000, warmup = 2000
-# )
+ Gen_samples_fit13 <- update(
+   Gen_samples_fit0, formula = ~ .  - DW_roots - RelGenSpec + RelGenSpec:DW_above,
+   newdata = dataNL_sample, chains = 4, cores = 8,
+   iter = 5000, warmup = 2000
+ )
 # 
-# Gen_samples_fit10 <- add_criterion(Gen_samples_fit10, "loo")
-# loo_compare (Gen_samples_fit08, Gen_samples_fit10, Gen_samples_fit09, Gen_samples_fit0)
-# 
-# 
-# 
-# Gen_samples_fit11 <- update(
-#   Gen_samples_fit10, formula = ~ .  + RelGenSpec ,
-#   newdata = dataNL_sample, chains = 4, cores = 8,
-#   iter = 5000, warmup = 2000
-# )
-# 
-# Gen_samples_fit11 <- add_criterion(Gen_samples_fit11, "loo")
-# loo_compare (Gen_samples_fit08, Gen_samples_fit10, Gen_samples_fit09, Gen_samples_fit11)
-# 
-# 
-# Gen_samples_fit12 <- update(
-#   Gen_samples_fit10, formula = ~ .  - RelGenSpec:DW_above ,
-#   newdata = dataNL_sample, chains = 4, cores = 8,
-#   iter = 5000, warmup = 2000
-# )
-# 
-# Gen_samples_fit12 <- add_criterion(Gen_samples_fit12, "loo")
-# loo_compare (Gen_samples_fit08, Gen_samples_fit10, Gen_samples_fit11, Gen_samples_fit12)
-# 
-# Gen_samples_fit13 <- update(
-#   Gen_samples_fit12, formula = ~ .  + DW_roots ,
-#   newdata = dataNL_sample, chains = 4, cores = 8,
-#   iter = 5000, warmup = 2000
-# )
-# 
-# Gen_samples_fit13 <- add_criterion(Gen_samples_fit13, "loo")
-# loo_compare (Gen_samples_fit08, Gen_samples_fit13, Gen_samples_fit09, Gen_samples_fit12)
+ Gen_samples_fit13 <- add_criterion(Gen_samples_fit13, "loo")
+ loo_compare (Gen_samples_fit08, Gen_samples_fit13, Gen_samples_fit09, Gen_samples_fit12)
 # 
 # 
 # 
@@ -348,26 +424,20 @@ loo_compare (Gen_samples_fit0, Gen_samples_fit06, Gen_samples_fit09, Gen_samples
 # 
 # 
 
+### Model  is the best ###
 
+loo_compare (Gen_samples_fit0,  Gen_samples_fit01, 
+             Gen_samples_fit02, Gen_samples_fit03, 
+             Gen_samples_fit04, Gen_samples_fit08, 
+             Gen_samples_fit05B, Gen_samples_fit05C, 
+             Gen_samples_fit01B, Gen_samples_fit05, 
+             Gen_samples_fit07, Gen_samples_fit09, 
+             Gen_samples_fit10, Gen_samples_fit11)
 
+# While model 5B only including RelGenSpec is the best based on loo croiterion, it is calculated with large amout of divergent transitions (222)
+# The next best model is 05C RelGenSpec + DW_roots 
 
-
-# check convergence #
-launch_shinystan(Gen_samples_fit04)
-
-# posterior predictive checks #
-
-pp_check (Gen_samples_fit0, ndraws= 100) +
-  xlab ("AMF biomass in soil")
-
-# 3 Compare models #####
-
-Gen_samples_fit03 <- add_criterion(Gen_samples_fit03, "loo")
-loo_compare (Gen_samples_fit02, Gen_samples_fit03)
-### Model 02 is the best ###
-
-
-sum_mpd02_B <-  tidy (Gen_samples_fit04, effects = c("fixed"))
+ tidy (Gen_samples_fit04, effects = c("fixed"))
 
 
 
@@ -379,7 +449,7 @@ sum_mpd02_B <-  tidy (Gen_samples_fit04, effects = c("fixed"))
 dataNL_sample %>%
   #group_by(PlaSpe) %>%
   #data_grid(PlaSpe = seq_range(PlaSpe, n = 51)) %>%
-  add_epred_draws(Gen_samples_fit05) %>%
+  add_epred_draws(Gen_samples_fit05C) %>%
   ggplot(aes(x = RelGenSpec, y = AMF, color = ordered(PlaSpe))) +
   stat_lineribbon(aes(y = .epred)) +
   geom_point(data = dataNL_sample) +
@@ -391,7 +461,7 @@ dataNL_sample %>%
 #conditions = make_conditions (Gen_samples_fit04, "RelGenSpec")
 
 
-plot (conditional_effects(Gen_samples_fit05, effects = "DW_roots",  ndraws = 10000, spaghetti = F,  
+plot (conditional_effects(Gen_samples_fit05C, effects = "DW_roots",  ndraws = 10000, spaghetti = F,  
                     prob = 0.9, conditions = conditions), points =F)
 
 #plot (conditional_effects(Gen_samples_fit04, effects = "DW_roots:RelGenSpec",  ndraws = 10000, spaghetti = F,  
@@ -402,17 +472,18 @@ plot (conditional_effects(Gen_samples_fit05, effects = "DW_roots",  ndraws = 100
 
 #plot (conditional_effects(Gen_samples_fit04, effects = "RelGenSpec",  ndraws = 10000, spaghetti = F,  prob = 0.9, conditions = conditions2), points = T)
 
-plot (conditional_effects(Gen_samples_fit04, effects = "RelGenSpec:DW_roots",  ndraws = 10000, 
-                          spaghetti = F,  prob = 0.5))
+ conditional_effects(Gen_samples_fit05C, effects = "RelGenSpec:DW_roots",  ndraws = 10000, 
+                          spaghetti = F,  prob = 0.5)
 
 
 #conditions3= data.frame (DW_roots = c(0.25, 0.5, 0.75))
-conditions2 = make_conditions (Gen_samples_fit04, "DW_roots")
+conditions2 = make_conditions (Gen_samples_fit05C, "DW_roots")
 
-conditional_effects(Gen_samples_fit04, effects = "RelGenSpec",  ndraws = 10000, spaghetti = F,  prob = 0.8, conditions = conditions2)
+conditional_effects(Gen_samples_fit05C, effects = "RelGenSpec",  ndraws = 10000, spaghetti = F,  prob = 0.8, conditions = conditions2)
 
-launch_shinystan(Gen_samples_fit04
-                 )
+launch_shinystan(Gen_samples_fit05C )
+
+
 #Run with better iterations
 Gen_samples_fit04 <- update(
   Gen_samples_fit0, formula = ~ .  -  DW_roots - RelGenSpec ,

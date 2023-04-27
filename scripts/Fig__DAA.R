@@ -66,9 +66,9 @@ taxa_edgeR <-
   tax_table (ps_edgeR) %>% 
   data.frame () %>%  
   mutate(GenusLabel = ifelse(!is.na(Genus), paste(Genus), 
-                             ifelse(!is.na(Family), paste( Family, ' sp.',  sep = ""), 
-                                    ifelse(!is.na(Order), paste('Unid. ', Order, sep = ""),
-                                           ifelse(!is.na(Class), paste('Unid. ', Class, sep = ""), paste("Unid. ", Phylum, sep = "")))))) %>% 
+                             ifelse(!is.na(Family), paste('unid. ', Family, sep = ""), 
+                                    ifelse(!is.na(Order), paste('unid. ', Order, sep = ""),
+                                           ifelse(!is.na(Class), paste('unid. ', Class, sep = ""), paste("Unid. ", Phylum, sep = "")))))) %>% 
   as_tibble (rownames = "ASV_ID" ) %>%  
   select (ASV_ID, GenusLabel,Phylum, Class, Family, Genus)
 
@@ -130,6 +130,11 @@ colnames(design) <- levels(y$samples$group)
 
 #GLM ####
 fit <- glmQLFit(y, design)
+
+
+
+
+
 
 #GLM F-test #####
 #compare the coefficients of the glm 
@@ -253,9 +258,9 @@ df.tax <-  df.tax  %>% mutate( TaxLabel = paste(Family, Genus, sep = "_")) %>%
 # Change the NA in the taxon table to the nearest identified taxon
 df.tax = df.tax %>%
   mutate(GenusLabel = ifelse(!is.na(Genus), paste(Genus), 
-                             ifelse(!is.na(Family), paste( Family,' sp.', sep = ""), 
-                                    ifelse(!is.na(Order), paste('Unid. ', Order, sep = ""),
-                                           ifelse(!is.na(Class), paste('Unid. ', Class, sep = ""), paste("Unid. ", Phylum, sep = "")))))) 
+                             ifelse(!is.na(Family), paste( 'unid. ', Family, sep = ""), 
+                                    ifelse(!is.na(Order), paste('unid. ', Order, sep = ""),
+                                           ifelse(!is.na(Class), paste('unid. ', Class, sep = ""), paste("Unid. ", Phylum, sep = "")))))) 
 
 # get a tibble of the whole taxa table incl new GenusLabel
 taxa_names <- df.tax %>% as_tibble ()
@@ -390,6 +395,33 @@ DAA %>%  add_column(model = "RelGen") %>%
 
 #%>% 
 Perm_DAA_boxplot_tTest %>% map_dbl ("p.value")
+
+
+## Permutational t test ~ PlaSpe, paired  ####
+#to compare if the log FC differ between the models (for each plant species) ##
+Perm_DAA_boxplot_tTest_plaspe <- 
+  DAA %>%  add_column(model = "RelGen") %>% 
+  bind_rows(DAA_PlaSpe %>%  add_column (model ="Plant")) %>% 
+  filter (!is.na (GenusLabel)) %>% 
+  #filter (Family!= "Diversisporaceae") %>% 
+  filter (PlaSpe != "RelGen") %>% 
+  left_join (meta_plants) %>%  
+  group_split(PlantSpeciesfull) %>% 
+  purrr::set_names(purrr::map_chr(., ~.x$PlaSpe[1])) %>% 
+  map (~perm.t.test (.$logFC ~ .$model, nperm= 999, paired = T, .id = .$PlaSpe)) 
+
+# Permutational t-test ~ GenusLabel ####
+
+Perm_DAA_boxplot_tTest_GenusLabel <- 
+  DAA %>%  add_column(model = "RelGen") %>% 
+  bind_rows(DAA_PlaSpe %>%  add_column (model ="Plant")) %>% 
+  filter (!is.na (GenusLabel)) %>% 
+  filter (Family!= "Diversisporaceae") %>% 
+  filter (PlaSpe != "RelGen") %>% 
+  left_join (meta_plants) %>%  
+  group_split(GenusLabel) %>% 
+  purrr::set_names(purrr::map_chr(., ~.x$GenusLabel[1])) %>% 
+  map (~perm.t.test (.$logFC ~ .$model, nperm= 9999, paired = T, .id = .$GenusLabel)) 
 
 
 

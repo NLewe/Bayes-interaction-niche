@@ -394,3 +394,123 @@ All_Metrics_E2_sample  <-
 
 saveRDS(All_Metrics_E2_sample, "results/All_metrics_E2_sample.rds")
 
+
+### Tree #####
+
+# sequences from NCBI
+# jalview alignment using MAFFT
+# concat with copy paste 
+# NJ tree in Jalview 
+
+# This is how the covariance structure was calculated: '
+
+## Build tree ####
+dnaTRNL<-read.dna("data/Exp2Fasta/matK genes/concat_align.fa",format="fasta")
+
+dnaTRNL
+labels(dnaTRNL) #check, change
+rownames(dnaTRNL)<-c("AchMil" ,"CicInt","PlaLan", "HolLan" ,"PoaCit", "BroWil","SchAru", "AgrCap") #### YOU CAN NAME YOUR PLANTS HERE
+
+## Build  tree
+# I used JalView (software) to generate the tree and the pairwise alignment
+tree_jalView<-read.tree("data/Exp2Fasta/matK genes/concat_tree_mafft")
+tree_jalView$tip.label # check
+plot(tree_jalView)
+# 
+# # rename 
+tree_jalView$tip.label <- c("PlaLan","CicInt","AchMil", "BroWil","PoaCit","SchAru", "AgrCap", "HolLan"  ) 
+
+## optimise tree using maximum likelihood
+dna2 <- as.phyDat(dnaTRNL) 
+class(dna2)
+
+tre.ini<-nj(dist.dna(dnaTRNL, model="TN93"))
+tre.ini
+
+#To  initialize  the  optimization  procedure,  we  need  an  initial  fit  for  the model chosen.  
+#This is computed using pml
+fit.ini<-pml(tre.ini, dna2,k=4)
+
+fit.ini<-pml(tree_jalView, dna2,k=4)
+
+#Optimize tree
+fit<-optim.pml(fit.ini, optNni = TRUE, optBf = TRUE, optQ = TRUE,optGamma = TRUE)
+fit
+class(fit)
+names(fit) ##all the useful parameters of the model and the optimal tree
+#optimal tree is stored in fit$tree
+
+##test if optimized tree is better than original
+anova(fit.ini,fit)
+AIC(fit.ini)
+AIC(fit) # YES
+
+treeML<-root(fit$tree,1)
+plot(treeML)
+
+# get variance structure for model ###
+A <- ape::vcv.phylo(treeML) 
+ saveRDS (A, "data/covariance_str_tree_concat_plants.rds") #covaraince structure based on trnl tree , for glmm models
+
+
+ 
+ 
+
+
+
+ 
+ 
+ ## Build tree matK ####
+ dnamatK<-read.dna("data/Exp2Fasta/matK genes/align_matK_8.fa",format="fasta")
+ 
+ dnamatK
+ labels(dnamatK) #check, change
+ rownames(dnamatK)<-c("AchMil" ,"AgrCap", "BroWil","CicInt","SchAru","HolLan","PlaLan", "PoaCit"  ) #### YOU CAN NAME YOUR PLANTS HERE
+ 
+ ## Build  tree
+ # I used JalView (software) to generate the tree and the pairwise alignment
+ tree_jalView<-read.tree("data/Exp2Fasta/matK genes/tree8")
+ tree_jalView$tip.label # check
+ plot(tree_jalView)
+ # 
+ # # rename 
+ tree_jalView$tip.label <- c("PlaLan","CicInt","AchMil", "BroWil","PoaCit","SchAru",  "HolLan", "AgrCap" ) 
+ 
+ ## optimise tree using maximum likelihood
+ dna2 <- as.phyDat(dnamatK) 
+ class(dna2)
+ 
+ tre.ini<-nj(dist.dna(dnamatK, model="TN93"))
+ tre.ini
+ 
+ #To  initialize  the  optimization  procedure,  we  need  an  initial  fit  for  the model chosen.  
+ #This is computed using pml
+ fit.ini<-pml(tre.ini, dna2,k=4)
+ 
+ fit.ini<-pml(tree_jalView, dna2,k=4)
+ 
+ #Optimize tree
+ fit<-optim.pml(fit.ini, optNni = TRUE, optBf = TRUE, optQ = TRUE,optGamma = TRUE)
+ fit
+ class(fit)
+ names(fit) ##all the useful parameters of the model and the optimal tree
+ #optimal tree is stored in fit$tree
+ 
+ ##test if optimized tree is better than original
+ anova(fit.ini,fit)
+ AIC(fit.ini)
+ AIC(fit) # YES
+ 
+ treeML<-root(fit$tree,1)
+ plot(treeML)
+ 
+ # get variance structure for model ###
+ B <- ape::vcv.phylo(treeML) 
+ saveRDS (B, "data/covariance_str_tree_matK_plants.rds") #covaraince structure based on trnl tree , for glmm models
+ 
+ 
+ 
+ 
+ 
+ 
+ 

@@ -11,6 +11,7 @@ library (tidybayes)
 library (brms)
 library(modelr)
 library (broom.mixed)
+library(GGally)
 
 # https://cran.r-project.org/web/packages/tidybayes/vignettes/tidy-brms.html
 
@@ -21,31 +22,62 @@ library (broom.mixed)
 PCA_metric_data_sample <- readRDS ("results/PCA_metric_data_sample.rds")
 
 dataNL_sample <- dataNL %>%  left_join (PCA_metric_data_sample) %>% 
-  left_join(RelGen_E1_E2_sample %>%  select (sampleID, RelGenSpec) ) %>% 
-  filter (!is.na (AMF),  !is.na (RelGenSpec))
+  left_join(RelGen_E1_E2_sample %>%  dplyr::select (sampleID, RelGenSpec  )) %>% 
+  filter (!is.na (AMF),  !is.na (RelGenSpec)) %>% 
+  filter (sampleID != "R18")  %>%   ## plant lost shoot biomass as it was almost dead
+    dplyr::select (!starts_with ("Dim")) %>% 
+  mutate (DWRA = DW_roots /DW_above )#%>% 
+ # mutate (AMFlog = log (AMF), RGlog = log (RelGenSpec), DWR = log (DW_roots), DWA = log (DW_above))  
+### these made the mdel terrible
+
+# waht is the distribution of the data?
+(hist <- ggplot(dataNL_sample, aes(x = DWRA )) +
+    geom_histogram(bins = 40) +
+    theme_classic())
+
+plot (dataNL_sample$RelGenSpec, dataNL_sample$DWRA)
+
+mod <- lm (AMF ~ RelGenSpec + DWRA , data = dataNL_sample)
+
+plot (mod)
 
 
 
-# 0A Specify the RelGenSpecialsist model 0####
+
+
+# right skewed for RelGenSpec, but left skewed for DW_roots- use diff family??
+
+# 0A Specify  model 0####
 ## get default  priors  #### 
-prior0 <- get_prior ( AMF ~ RelGenSpec * DW_roots + (1|gr(PlaSpe, cov = A)) + (1|PlantSpeciesfull),#+ (1|PlantSpeciesfull),
-                      #+ (1+ mean_DW_roots|PlantSpeciesfull) ### hi is only needed to account for diff between the species 
-                      #+ OTHEr than phylogenetic (environmental factors, niches)
+prior0 <- get_prior ( AMF ~ RelGenSpec * DWRA + (1|gr(PlaSpe, cov = A)) ,
+                       ### is only needed to account for diff between the species 
+                      #+ OTHER than phylogenetic (environmental factors, niches)
+                       family = skew_normal (),
                       data = dataNL_sample, data2 = list(A = A))
 
 # model 0 
+control = list(adapt_delta = 0.8) ## then rerun!!
 
 
 Gen_samples_fit0 <- brm(
-  AMF ~ RelGenSpec * DW_roots  + (1 |gr(PlaSpe, cov = A))+ (1|PlantSpeciesfull),
+  AMF ~ RelGenSpec * DWRA + (1 |gr(PlaSpe, cov = A)),
   data = dataNL_sample,
-  family = gaussian(),
+  family = skew_normal(),
   data2 = list(A = A),
-  prior = prior0,  sample_prior = TRUE, chains = 4, cores = 8,
-  iter = 4000, warmup = 1000
+  prior = prior0,  chains = 4, cores = 8,
+  iter = 2000, warmup = 500
 )
 
-#control = list(adapt_delta = 0.9) ## then rerun!!
+##
+Gen_samples_fit0 <- add_criterion(Gen_samples_fit0, c("loo", "waic"))
+
+
+# model 0 
+control = list(adapt_delta = 0.93) ## then rerun!!
+
+
+
+##
 
 #The variables PlaSpe and PlantSpeciesfull are identical as they are both identifiers of the species. 
 #However, we model the phylogenetic covariance only for PlaSpe and thus the PlantSpeciesfull variable accounts for any specific effect 
@@ -57,27 +89,6 @@ summary(Gen_samples_fit0)
 
 # estimate of phylogenetic signal!!
 
-hyp0 <- "sd_PlaSpe__Intercept^2 / (sd_PlaSpe__Intercept^2 + sigma^2) = 0"
-
-hyp0 <- hypothesis(Gen_samples_fit0, hyp0, class = NULL)
-
-hyp0
-#Note that the phylogenetic signal is just a synonym of the intra-class correlation (ICC) used in the context phylogenetic analysis.
-#the intraclass correlation, or the intraclass correlation coefficient (ICC),[1] is a 
-#descriptive statistic that can be used when quantitative measurements are made on units that are organized into groups. 
-#It describes how strongly units in the same group resemble each other. 
-#While it is viewed as a type of correlation, unlike most other correlation measures it operates 
-#on data structured as groups, rather than data structured as paired observations. 
-
-
-### means we ahave a phylogenetc signal 
-plot (hyp0)
-
-#  check sampling quality of model 0 ###
-
-# Look for rhat, ESS, Sd etc
-summary (Gen_samples_fit0)
-
 # check convergence #
 launch_shinystan(Gen_samples_fit0)
 
@@ -86,20 +97,25 @@ launch_shinystan(Gen_samples_fit0)
 pp_check (Gen_samples_fit0, ndraws= 100) +
   xlab ("AMF biomass in soil")
 
-
+bayes_R2(Gen_samples_fit0)
 
 # 1 Update to model 01 ####
 
 #and then fit it again - adding more variables
 
 Gen_samples_fit01 <- update(
-  Gen_samples_fit0, formula = ~ . - DW_roots ,
+  Gen_samples_fit0, formula = ~ . - RelGenSpec:DWRA,
   newdata = dataNL_sample, chains = 4, cores = 8,
   iter = 5000, warmup = 2000
 )
 
+Gen_samples_fit01 <- add_criterion(Gen_samples_fit01, c("loo", "waic"))
+
+
+loo_compare (Gen_samples_fit0, Gen_samples_fit01)
+
 Gen_samples_fit01B <- update(
-  Gen_samples_fit0, formula = ~ . - (1|PlantSpeciesfull) ,
+  Gen_samples_fit01, formula = ~ . -(1|gr(PlaSpe, cov = A)) + (1|PlantSpeciesfull) ,
   newdata = dataNL_sample, chains = 4, cores = 8,
   iter = 5000, warmup = 2000
 )
@@ -124,7 +140,7 @@ Gen_samples_fit0 <- add_criterion(Gen_samples_fit0, "loo")
 Gen_samples_fit01 <- add_criterion(Gen_samples_fit01, "loo")
 Gen_samples_fit01B <- add_criterion(Gen_samples_fit01B, "loo")
 
-loo_compare (Gen_samples_fit0, Gen_samples_fit01, Gen_samples_fit01B, Gen_samples_fit02, Gen_samples_fit03, Gen_samples_fit04, Gen_samples_fit05)
+loo_compare (Gen_samples_fit0, Gen_samples_fit01, Gen_samples_fit01B)
 # best performing model will be named at top
 #
 
@@ -135,9 +151,7 @@ loo_compare (Gen_samples_fit0, Gen_samples_fit01, Gen_samples_fit01B, Gen_sample
 #and then fit it again - adding more variables
 
 Gen_samples_fit02 <- update(
-  Gen_samples_fit0, formula = ~ .  -  RelGenSpec ,
-  newdata = dataNL_sample, chains = 4, cores = 8,
-  iter = 5000, warmup = 2000
+  Gen_samples_fit01B, formula = ~ .  -  DWRA 
 )
 
 
@@ -169,9 +183,16 @@ Gen_samples_fit03 <- update(
   iter = 5000, warmup = 2000
 )
 
+Gen_samples_fit03B <- update(
+  Gen_samples_fit03, formula = ~ .  -  RelGenSpec ,
+  newdata = dataNL_sample, chains = 4, cores = 8,
+  iter = 5000, warmup = 2000
+)
 Gen_samples_fit03 <- add_criterion(Gen_samples_fit03, "loo")
-loo_compare (Gen_samples_fit0,  Gen_samples_fit01, 
-             Gen_samples_fit02, Gen_samples_fit03)
+Gen_samples_fit03B <- add_criterion(Gen_samples_fit03B, "loo")
+
+loo_compare (Gen_samples_fit05Cskew,  Gen_samples_fit01, 
+             Gen_samples_fit03B)
 
 
 # Look for rhat, ESS, Sd etc
@@ -183,8 +204,8 @@ summary (Gen_samples_fit03)
 
 Gen_samples_fit04 <- update(
   Gen_samples_fit0, formula = ~ .  -  DW_roots - RelGenSpec ,
-  newdata = dataNL_sample, chains = 4, cores = 8,
-  iter = 5000, warmup = 2000
+  newdata = dataNL_sample, chains = 6, cores = 8,
+  iter = 8000, warmup = 4000
 )
 
 Gen_samples_fit04 <- add_criterion(Gen_samples_fit04, "loo")
@@ -195,6 +216,10 @@ loo_compare (Gen_samples_fit0,  Gen_samples_fit01,
 
 # Look for rhat, ESS, Sd etc
 summary (Gen_samples_fit04)
+pp_check (Gen_samples_fit04, ndraws = 100)
+
+
+
 
 # 5 Update to model 05 ####
 
@@ -206,9 +231,11 @@ Gen_samples_fit05 <- update(
   iter = 5000, warmup = 2000
 )
 
+
 Gen_samples_fit05 <- add_criterion(Gen_samples_fit05, "loo")
-loo_compare (Gen_samples_fit0,  Gen_samples_fit05, Gen_samples_fit04, 
+loo_compare (Gen_samples_fit05C,  Gen_samples_fit05, Gen_samples_fit05skew, 
              Gen_samples_fit03)
+pp_check (Gen_samples_fit05, ndraws = 50)
 
 
 # Look for rhat, ESS, Sd etc
@@ -225,8 +252,9 @@ Gen_samples_fit05B <- update(
 )
 
 Gen_samples_fit05B <- add_criterion(Gen_samples_fit05B, "loo")
-loo_compare (Gen_samples_fit05B,  Gen_samples_fit05, Gen_samples_fit04, 
+loo_compare (Gen_samples_fit05B,  Gen_samples_fit05,fit2, 
              Gen_samples_fit03)
+fit2 <- add_criterion(fit2, "loo")
 
 
 # Look for rhat, ESS, Sd etc
@@ -239,9 +267,18 @@ summary (Gen_samples_fit05B)
 
 Gen_samples_fit05C <- update(
   Gen_samples_fit05B, formula = ~ .  + DW_roots,
+  family = gaussian (),
   newdata = dataNL_sample, chains = 4, cores = 8,
   iter = 5000, warmup = 2000
 )
+
+Gen_samples_fit05Cskew <- update(
+  Gen_samples_fit05C, family = skew_normal(),
+  newdata = dataNL_sample, chains = 4, cores = 8,
+  iter = 5000, warmup = 2000
+) 
+Gen_samples_fit05Cskew <- add_criterion(Gen_samples_fit05Cskew, "loo")
+
 
 Gen_samples_fit05C <- add_criterion(Gen_samples_fit05C, "loo")
 loo_compare (Gen_samples_fit0,  Gen_samples_fit05, Gen_samples_fit05B, 
@@ -249,10 +286,10 @@ loo_compare (Gen_samples_fit0,  Gen_samples_fit05, Gen_samples_fit05B,
 
 
 # Look for rhat, ESS, Sd etc
-summary (Gen_samples_fit05)
-
+summary (Gen_samples_fit05C)
+launch_shinystan(Gen_samples_fit05C)
 # 5c Update to model 05C ####
-
+pp_check(Gen_samples_fit05C, ndraws = 100)
 #and then fit it again - adding more variables
 
 Gen_samples_fit05D <- update(
@@ -261,14 +298,22 @@ Gen_samples_fit05D <- update(
   iter = 5000, warmup = 2000
 )
 
+Gen_samples_fit05E <- update(
+  Gen_samples_fit05C, formula = ~ .  - RelGenSpec,
+  newdata = dataNL_sample, chains = 4, cores = 8,
+  iter = 5000, warmup = 2000
+)
+
+
 Gen_samples_fit05D <- add_criterion(Gen_samples_fit05D, "loo")
+Gen_samples_fit05E <- add_criterion(Gen_samples_fit05E, "loo")
 
 Gen_samples_fit05B <- add_criterion(Gen_samples_fit05B, "waic")
 Gen_samples_fit05D <- add_criterion(Gen_samples_fit05D, "waic")
 
 Gen_samples_fit05C <- add_criterion(Gen_samples_fit05C, "waic")
 loo_compare (Gen_samples_fit05D,  Gen_samples_fit05, Gen_samples_fit05B, 
-             Gen_samples_fit05C, Gen_samples_fit03)
+             Gen_samples_fit05C, Gen_samples_fit05E)
 
 loo_compare (Gen_samples_fit05D,  Gen_samples_fit05B, 
              Gen_samples_fit05C,criterion = "waic")
@@ -328,7 +373,24 @@ Gen_samples_fit08 <- update(
 
 Gen_samples_fit08 <- add_criterion(Gen_samples_fit08, "loo")
 loo_compare (Gen_samples_fit06, Gen_samples_fit04, Gen_samples_fit08, Gen_samples_fit05B, Gen_samples_fit07)
+launch_shinystan(Gen_samples_fit08)
 
+
+# 8 Update to model 08B ####
+
+#and then fit it again - adding more variables
+
+Gen_samples_fit08B <- update(
+  Gen_samples_fit08, formula = ~ . +DW_roots + RelGenSpec:DW_above ,
+  newdata = dataNL_sample, chains = 4, cores = 8,
+  iter = 5000, warmup = 2000
+)
+
+Gen_samples_fit08B <- add_criterion(Gen_samples_fit08B, "loo")
+loo_compare (Gen_samples_fit04, Gen_samples_fit08, Gen_samples_fit05B, Gen_samples_fit08B)
+
+
+launch_shinystan(Gen_samples_fit08B)
 
 
 # 9 Update to model 09 ####
@@ -342,7 +404,8 @@ Gen_samples_fit09 <- update(
 )
 
 Gen_samples_fit09 <- add_criterion(Gen_samples_fit09, "loo")
-loo_compare (Gen_samples_fit04, Gen_samples_fit05B, Gen_samples_fit09, Gen_samples_fit08, Gen_samples_fit05)
+loo_compare (Gen_samples_fit04, Gen_samples_fit05B, Gen_samples_fit05C
+             , Gen_samples_fit08, Gen_samples_fit05Cskew)
 
 # 
 # 10 Update to model 10 ####
@@ -432,7 +495,7 @@ loo_compare (Gen_samples_fit0,  Gen_samples_fit01,
              Gen_samples_fit05B, Gen_samples_fit05C, 
              Gen_samples_fit01B, Gen_samples_fit05, 
              Gen_samples_fit07, Gen_samples_fit09, 
-             Gen_samples_fit10, Gen_samples_fit11)
+             Gen_samples_fit10, Gen_samples_fit06)
 
 # While model 5B only including RelGenSpec is the best based on loo croiterion, it is calculated with large amout of divergent transitions (222)
 # The next best model is 05C RelGenSpec + DW_roots 
@@ -449,7 +512,7 @@ loo_compare (Gen_samples_fit0,  Gen_samples_fit01,
 dataNL_sample %>%
   #group_by(PlaSpe) %>%
   #data_grid(PlaSpe = seq_range(PlaSpe, n = 51)) %>%
-  add_epred_draws(Gen_samples_fit05C) %>%
+  add_epred_draws(Gen_samples_fit02) %>%
   ggplot(aes(x = RelGenSpec, y = AMF, color = ordered(PlaSpe))) +
   stat_lineribbon(aes(y = .epred)) +
   geom_point(data = dataNL_sample) +
@@ -457,13 +520,12 @@ dataNL_sample %>%
   scale_color_brewer(palette = "Set2") +
   facet_wrap(~PlaSpe, scales = "free_x")
 
-
+# conditional effects ####
 #conditions = make_conditions (Gen_samples_fit04, "RelGenSpec")
 
 
-plot (conditional_effects(Gen_samples_fit05C, effects = "DW_roots",  ndraws = 10000, spaghetti = F,  
-                    prob = 0.9, conditions = conditions), points =F)
-
+plot (conditional_effects(Gen_samples_fit01, effects = "DW_roots:RelGenSpec",  ndraws = 10000, spaghetti = F,  
+                    prob = 0.9, conditions = conditions), points =T)
 #plot (conditional_effects(Gen_samples_fit04, effects = "DW_roots:RelGenSpec",  ndraws = 10000, spaghetti = F,  
 #                          prob = 0.9), points =T)
 
@@ -472,14 +534,16 @@ plot (conditional_effects(Gen_samples_fit05C, effects = "DW_roots",  ndraws = 10
 
 #plot (conditional_effects(Gen_samples_fit04, effects = "RelGenSpec",  ndraws = 10000, spaghetti = F,  prob = 0.9, conditions = conditions2), points = T)
 
- conditional_effects(Gen_samples_fit05C, effects = "RelGenSpec:DW_roots",  ndraws = 10000, 
-                          spaghetti = F,  prob = 0.5)
+ plot (conditional_effects(Gen_samples_fit01, effects = "RelGenSpec:DW_roots",  ndraws = 10000, 
+                          spaghetti = F,  prob = 0.5
+                          ), points = T)
 
 
 #conditions3= data.frame (DW_roots = c(0.25, 0.5, 0.75))
-conditions2 = make_conditions (Gen_samples_fit05C, "DW_roots")
+conditions2 = make_conditions (Gen_samples_fit0, "DW_above")
 
-conditional_effects(Gen_samples_fit05C, effects = "RelGenSpec",  ndraws = 10000, spaghetti = F,  prob = 0.8, conditions = conditions2)
+plot (conditional_effects(Gen_samples_fit0, effects = "RelGenSpec:DW_roots",  ndraws = 10000, spaghetti = F,  
+                          prob = 0.5, conditions = conditions2), points = T)
 
 launch_shinystan(Gen_samples_fit05C )
 

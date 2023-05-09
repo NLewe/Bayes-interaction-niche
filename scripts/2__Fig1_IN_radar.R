@@ -15,18 +15,18 @@ library (RVAideMemoire)
 
 plot_radar_E1<- 
   All_metrics_E1_8Sp %>%  
-  select (-PlantFamily, -Exp) %>% 
+  dplyr::select (-PlantFamily, -Exp) %>% 
   ungroup() %>% 
-  mutate(across(!c(PlantSpeciesfull,`β(core)`, CU), rescale)) %>% ### achtung,`β(core)` aus de Berechnung genommen da es schon auf o bis 1 scala ist
-  mutate (`β(core)` = `β(core)`/100) %>% 
+  mutate(across(!c(PlantSpeciesfull), rescale)) %>% ### achtung,`β(core)` kann man aus de Berechnung genommen da es schon auf o bis 1 scala ist
+  #mutate (`β(core)` = `β(core)`/100) %>% 
   ggradar(legend.title = "Plant species", 
           plot.title = "Experiment 1")
 
 plot_radar_E2 <- 
   All_metrics_E2 %>%  ungroup () %>% 
-  select (-PlantFamily, -Exp) %>% 
-  mutate(across(!c(PlantSpeciesfull,`β(core)`, CU), rescale)) %>% ### achtung,`β(core)` aus de Berechnung genommen da es schon auf o bis 1 scala ist
-  mutate (`β(core)` = `β(core)`/100) %>% 
+  dplyr::select (-PlantFamily, -Exp) %>% 
+  mutate(across(!c(PlantSpeciesfull), rescale)) %>% ### achtung,`β(core)` aus de Berechnung genommen da es schon auf o bis 1 scala ist
+  #mutate (`β(core)` = `β(core)`/100) %>% 
   ggradar(legend.title = "Plant species", plot.title = "Experiment 2", 
           background.circle.colour = "white",
           background.circle.transparency = 0, 
@@ -56,15 +56,15 @@ radar_empty  <- ggradar(extra,          background.circle.colour = "white",
 radar_plots <- 
   All_metrics_E1_8Sp %>%  
   ungroup() %>% 
-  mutate(across(!c(PlantSpeciesfull,PlantFamily,Exp, `β(core)`, CU), rescale)) %>% 
+  mutate(across(!c(PlantSpeciesfull,PlantFamily,Exp), rescale)) %>% 
         bind_rows (All_metrics_E2 %>% 
                    ungroup() %>% 
-                   mutate(across(!c(PlantSpeciesfull,PlantFamily,Exp,`β(core)`, CU ), rescale))) %>% 
-                   select (-PlantFamily) %>% 
-  mutate (`β(core)` = `β(core)`/100) %>% 
+                   mutate(across(!c(PlantSpeciesfull,PlantFamily,Exp ), rescale))) %>% 
+                   dplyr:: select (!PlantFamily) %>% 
+  #mutate (`β(core)` = `β(core)`/100) %>% 
    # select (!uniqueASV) %>% 
   group_split(PlantSpeciesfull) %>% 
-  map (~select (., -PlantSpeciesfull) %>% relocate (Exp)) %>% 
+  map (~dplyr::select (., -PlantSpeciesfull) %>% relocate (Exp)) %>% 
   map (~ggradar(.,          background.circle.colour = "white",
                 background.circle.transparency = 0, 
                 axis.line.colour = "grey30", 
@@ -96,17 +96,17 @@ ggarrange (radar_plots[[5]], radar_plots[[8]], radar_plots[[7]], radar_plots[[1]
 RelGen_E1_E2 <- 
 All_metrics_E1_8Sp %>%  
   ungroup() %>% 
-  mutate(across(!c(PlantSpeciesfull,PlantFamily,Exp, `β(core)`, CU), rescale)) %>% 
+  mutate(across(!c(PlantSpeciesfull,PlantFamily,Exp), rescale)) %>% 
   bind_rows (All_metrics_E2 %>% 
                ungroup() %>% 
-               mutate(across(!c(PlantSpeciesfull,PlantFamily,Exp,`β(core)`, CU), rescale))) %>% 
-  select (-PlantFamily)  %>% 
-  mutate (RelGenSpec = (Shannon + Richness + uniqueASV + CU + `β(core)`/100 + PD + MPD) /7 )
+               mutate(across(!c(PlantSpeciesfull,PlantFamily,Exp), rescale))) %>% 
+  dplyr::select (-PlantFamily)  %>% 
+  mutate (RelGenSpec = (Shannon + Richness + uniqueASV + CU + `β(core)` + PD + MPD) /7 )
 
 ## table for plant species ###
 RelGen_E1_E2 %>%  
   mutate (RelGenSpec = round (RelGenSpec, 3)) %>% 
-  select (PlantSpeciesfull, RelGenSpec, Exp) %>% 
+  dplyr::select (PlantSpeciesfull, RelGenSpec, Exp) %>% 
   pivot_wider (values_from = RelGenSpec, names_from = Exp) %>% 
   flextable ()
                           
@@ -115,11 +115,11 @@ RelGen_E1_E2 %>%
 RelGen_E1_E2_sample <-
 All_Metrics_E2_sample %>% 
   ungroup() %>% 
-  mutate(across(!c(PlantSpeciesfull,PlantFamily,PlaSpe, Exp,`β(core)`, CU, sampleID), rescale)) %>% 
+  mutate(across(!c(PlantSpeciesfull,PlantFamily,PlaSpe, Exp, sampleID), rescale)) %>% 
   bind_rows (All_metrics_E1_samples %>%    
                ungroup() %>% 
-               mutate(across(!c(PlantSpeciesfull,PlantFamily,PlaSpe,`β(core)`, CU, Exp, sampleID), rescale))) %>% 
-  mutate (RelGenSpec = (Shannon + Richness + uniqueASV + CU + `β(core)`/100 + PD + MPD) /7 ) %>% 
+               mutate(across(!c(PlantSpeciesfull,PlantFamily,PlaSpe, Exp, sampleID), rescale))) %>% 
+  mutate (RelGenSpec = (Shannon + Richness + uniqueASV + CU + `β(core)` + PD + MPD) /7 ) %>% 
   relocate (where (is.numeric)) 
 
 # experiment 2 sorting for highest generalist
@@ -138,13 +138,13 @@ RelGen_E1_E2_mean <-
 # Plot 
 # plot using the values from radarplot ##
 RelGen_E1_E2 %>% 
-  left_join (RelGen_E2_mean %>% ungroup () %>%   select (!Exp)) %>%
+  left_join (RelGen_E2_mean %>% ungroup () %>%   dplyr::select (!Exp)) %>%
   ggplot (aes (x = PlantSpeciesfull, y = RelGenSpec, fill = Exp)) + 
   geom_col(position = position_dodge ())
 
 
 RelGen_E1_E2 %>% 
-  left_join (RelGen_E2_mean %>% ungroup () %>%   select (!Exp)) %>%
+  left_join (RelGen_E2_mean %>% ungroup () %>%   dplyr::select (!Exp)) %>%
   ggplot (aes (x = reorder (PlantSpeciesfull, -meanGen), y = RelGenSpec, fill = Exp)) + 
   geom_col() +
   facet_grid(~Exp)

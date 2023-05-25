@@ -72,6 +72,16 @@ sample_data(ps_edgeR_relGenSpec)  <- new_sampledata_gen
 
 ## different version of medelling - generalism as variable 
 
+# Test correlations of predictors #####
+RelGen_E1_E2_sample %>% anova_test (RelGenSpec ~ PlantSpeciesfull)
+# Then all of the models are wrong - using root biomass shoot biomass and PlaSpe 
+#as predictors in model also .... but I want to know which of them explain how much of the 
+# changes in AMF abundance or biomass.
+
+# compare means##
+  RelGen_E1_E2_sample %>%  games_howell_test (RelGenSpec~ PlantSpeciesfull)  %>% view()
+
+
 #Gen_table  <-  factor(new_sampledata_gen$GenBins)
 
 
@@ -423,7 +433,7 @@ order_taxa <- get_taxa_name(p) %>%
   as_tibble () %>% 
   dplyr::rename ("ASV_ID" = "value") %>%  
   left_join (taxa_names) %>% 
-  add_column (order = c(1:17))
+  add_column (order = c(1:18))
 
 # get relative abundances for the ASVs for later use in the DAA plot
 ps_edgeR_glo_ASV <- subset_taxa(ps_edgeR_relGenSpec, Phylum == "Glomeromycota")

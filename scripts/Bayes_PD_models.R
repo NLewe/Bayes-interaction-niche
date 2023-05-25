@@ -11,20 +11,20 @@ library (brms)
 
 # 0A Specify the pd.obs model 0####
 ## get default  priors  #### 
-prior <- get_prior ( AMF ~ pd.obs + (1|gr(PlaSpe, cov = A)) 
+priorPD <- get_prior ( AMF ~ PD + (1|gr(PlaSpe, cov = A)) + (1|PlantSpeciesfull)
                      #+ (1+ mean_DW_roots|PlantSpeciesfull) ### hi is only needed to account for diff between the species 
                      #+ OTHEr than phylogenetic (environmental factors, niches)
-                     , data = dataNL, data2 = list(A = A))
+                     , data = data_metrics, data2 = list(A = A))
 
 # model 0 
 
 
 PD_fit0 <- brm(
-  AMF ~ pd.obs  + (1|gr(PlaSpe, cov = A)) #,+ (1|PlantSpeciesfull) ,
-  data = dataNL,
+  AMF ~ PD  + (1|gr(PlaSpe, cov = A))+ (1|PlantSpeciesfull) ,
+  data = data_metrics,
   family = gaussian(),
   data2 = list(A = A),
-  prior = prior,  sample_prior = TRUE, chains = 4, cores = 8,
+  prior = priorPD,  sample_prior = TRUE, chains = 4, cores = 8,
   iter = 4000, warmup = 1000
 )
 
@@ -83,7 +83,7 @@ pp_check (PD_fit01, ndraws= 100) +
 PD_fit0 <- add_criterion(PD_fit0, "loo")
 
 PD_fit01 <- add_criterion(PD_fit01, "loo")
-loo_compare (PD_fit0, PD_fit01)
+loo_compare (PD_fit0, mpd_fit0, Gen_samples_fit0)
 # best performing model will be named at top
 #
 

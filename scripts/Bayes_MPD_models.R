@@ -34,7 +34,7 @@ mpd_fit0 <- brm(
   iter = 4000, warmup = 1000
 )
 
-#control = list(adapt_delta = 0.9) ## then rerun!!
+control = list(adapt_delta = 0.8) ## then rerun!!
 
 #The variables PlaSpe and PlantSpeciesfull are identical as they are both identifiers of the species. 
 #However, we model the phylogenetic covariance only for PlaSpe and thus the PlantSpeciesfull variable accounts for any specific effect 
@@ -108,7 +108,7 @@ pp_check (mpd_fit01, ndraws= 100) +
 mpd_fit0 <- add_criterion(mpd_fit0, "loo")
 
 mpd_fit01 <- add_criterion(mpd_fit01, "loo")
-loo_compare (mpd_fit0, mpd_fit01)
+loo_compare (Gen_samples_fit01, mpd_fit01)
 # best performing model will be named at top
 #
 
@@ -203,7 +203,7 @@ data_metrics %>%
   facet_wrap(~PlaSpe, scales = "free_x")
 
 
-conditional_effects(mpd_fit01, ndraws = 1000, spaghetti = F, mean = T, prob = 0.5)
+plot (conditional_effects(mpd_fit01, effects = "MPD:DW_roots", ndraws = 1000, spaghetti = F, mean = T, prob = 0.9), points = T)
 
 
 

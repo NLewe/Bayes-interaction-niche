@@ -89,6 +89,44 @@ uniqueASVsperPlaSpe   <-  ASV_table_Glo  %>%
   group_by(PlantSpeciesfull)  %>% 
   tally (name ="uniqueASVsperPlSpe")
 
+
+
+## Plot Unique for supplementary ####
+#Plot unique ASVs per plant##
+# Verteilung der Glo genera per plant species 
+p1  <-  ASV_table_Glo  %>%  
+  select(-c(Kingdom, Phylum, Class, Order, Species))  %>% 
+  gather (-c(ASV_ID, Genus, Family), key=sampleID, value = ASV_counts)  %>%
+  left_join(metaM0, by="sampleID") %>% 
+  filter (ASV_counts!=0)  %>% 
+  group_by (ASV_ID, PlantSpeciesfull, Genus) %>% 
+  tally () %>%
+  group_by(Genus, PlantSpeciesfull )  %>% 
+  tally () %>% 
+  replace_na(list (Genus="unidentified"))   %>% 
+  left_join (meannumberASVsper_species, by = "PlantSpeciesfull")  %>% 
+  ggplot (aes(x=reorder (PlantSpeciesfull,-mean_n_ASV_per_species), y= n, fill=Genus))  +
+  geom_bar(position="stack", stat ="identity") 
+
+plot_Exp1_unique<-
+  p1+ theme_light()+ 
+  coord_flip () +
+  ylab("Unique AMF ASVs per plant species") +
+  xlab ("Plant species") +
+  theme_light () +
+  theme(axis.text.y= element_text(family= "sans", face= "italic", size = 12)) +
+  theme (axis.text.x=element_text(family= "sans", size = 12))  +
+  theme (axis.title = element_text(family = "sans", size = 14 ),  
+         legend.title=element_text(size=13), 
+         legend.text=element_text(size=11, face ="italic")) +
+  scale_fill_manual(values = c( "unidentified" ="#C7EAE5", "Archaeospora"  = "#287D8EFF" , 
+                                "Acaulospora" =  "#C1A363" , 
+                                "Funneliformis" = "#F6E8C3", "Cetraspora"  = "#DFC27D", 
+                                "Claroideoglomus" =  "#20A386FF", 
+                                "Glomus" = "#80CDC1" , "Paraglomus" = "#35978F", 
+                                "Scutellospora"= "#01665E" ), name = "AMF genus"    )  +
+  ggtitle ("A) Experiment 1")
+
 ## Richness, Shannon, Chao #####
 
 adiv_richness  <- estimate_richness(ps_Glo_E1_8Sp, measures = c("Observed",  "Shannon", "Chao1")) %>% 
@@ -264,8 +302,15 @@ meannumberASVsper_species_M1  <-
 
 ASV_table_Glo_roots_M1 <- 
   otu_table (ps_M1_roots_Glo_rar) %>%  
-  data.frame ()  %>%  t () %>%  
+  data.frame() %>%  t () %>%  
   as_tibble (rownames = "sampleID") 
+
+ASV_table_Exp2_Glo  <- 
+    otu_table (ps_M1_roots_Glo_rar) %>%  
+  data.frame() %>%  
+  as_tibble (rownames = "ASV_ID") %>%   
+  left_join ((tax_table (ps_M1_roots_Glo_rar) %>% data.frame() %>%  as_tibble (rownames = "ASV_ID")), by = "ASV_ID")
+
 
 ## unique asvs ####
 unique_M1  <- 
@@ -277,6 +322,51 @@ unique_M1  <-
   tally () %>% 
   group_by(PlantSpeciesfull)  %>% 
   tally (name ="uniqueASVsperPlSpe")
+
+
+
+## Plot Unique for supplementary ####
+#Plot unique ASVs per plant##
+# Verteilung der Glo genera per plant species 
+p2  <-  
+  ASV_table_Exp2_Glo  %>%  
+  select(-c(Kingdom, Phylum, Class, Order, Species))  %>% 
+  gather (-c(ASV_ID, Genus, Family), key=sampleID, value = ASV_counts)  %>%
+  left_join(meta_M1Wcontrol, by="sampleID") %>% 
+  filter (ASV_counts!=0)  %>% 
+  group_by (ASV_ID, PlantSpeciesfull, Genus) %>% 
+  tally () %>%
+  group_by(Genus, PlantSpeciesfull )  %>% 
+  tally () %>% 
+  replace_na(list (Genus="unidentified"))   %>% 
+  left_join (meannumberASVsper_species, by = "PlantSpeciesfull")  %>%  ### i add the mean number of exp 1 here so that they are sorted the same way!!
+  ggplot (aes(x=reorder (PlantSpeciesfull,-mean_n_ASV_per_species), y= n, fill=Genus))  +
+  geom_bar(position="stack", stat ="identity") 
+
+plot_Exp2_unique<-
+  p2 + theme_light()+ 
+  coord_flip () +
+  ylab("Unique AMF ASVs per plant species") +
+  xlab ("Plant species") +
+  theme_light () +
+  theme(axis.text.y= element_text(family= "sans", face= "italic", size = 12)) +
+  theme (axis.text.x=element_text(family= "sans", size = 12))  +
+  theme (axis.title = element_text(family = "sans", size = 14 ),  
+         legend.title=element_text(size=13), 
+         legend.text=element_text(size=11, face ="italic")) +
+  scale_fill_manual(values = c( "unidentified" ="#C7EAE5", "Archaeospora"  = "#287D8EFF" , 
+                                "Acaulospora" =  "#C1A363" , "Diversispora" =  "darksalmon",
+                                "Funneliformis" = "#F6E8C3", "Cetraspora"  = "#DFC27D", 
+                                "Claroideoglomus" =  "#20A386FF", "Rhizophagus" = "darkgray",
+                                "Glomus" = "#80CDC1" , "Paraglomus" = "#35978F", 
+                                "Scutellospora"= "#01665E" ), name = "AMF genus"    )  +
+  ggtitle ("B) Experiment 2")
+  
+
+ggarrange (plot_Exp1_unique, plot_Exp2_unique,common.legend= T, 
+           legend = "bottom")
+
+
 
 ## CU ####
 comp_units_M1   <- meannumberASVsper_species_M1  %>% 

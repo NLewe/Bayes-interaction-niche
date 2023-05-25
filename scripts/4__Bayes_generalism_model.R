@@ -21,7 +21,7 @@ library(GGally)
 # data 
 PCA_metric_data_sample <- readRDS ("results/PCA_metric_data_sample.rds")
 
-dataNL_sample <- dataNL %>%  left_join (PCA_metric_data_sample) %>% 
+dataNL_sample <- dataNL %>%  left_join (PCA_metric_data_sample) %>%  # AMF soil is in nmol
   left_join(RelGen_E1_E2_sample %>%  dplyr::select (sampleID, RelGenSpec  )) %>% 
   filter (!is.na (AMF),  !is.na (RelGenSpec)) %>% 
   filter (sampleID != "R18")  %>%   ## plant lost shoot biomass as it was almost dead
@@ -40,6 +40,7 @@ plot (dataNL_sample$RelGenSpec, dataNL_sample$DWRA)
 mod <- lm (AMF ~ RelGenSpec + DWRA , data = dataNL_sample)
 
 plot (mod)
+
 
 
 

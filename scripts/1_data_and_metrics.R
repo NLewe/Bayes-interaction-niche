@@ -599,8 +599,22 @@ A <- ape::vcv.phylo(treeML)
  saveRDS (B, "data/covariance_str_tree_matK_plants.rds") #covaraince structure based on trnl tree , for glmm models
  
  
+ ## table supplementary ####
+ 
+ stand_pd_Glo_all_M1 %>% 
+   mutate (pd.obs = round (pd.obs,2) , pd.rand.mean = round (pd.rand.mean,2), 
+   pd.rand.sd = round (pd.rand.sd,2), pd.obs.z = round (pd.obs.z,2), 
+                                 pd.obs.p = round (pd.obs.p,4)) %>%  
+   select (-runs, - PlantSpeciesfull) %>% write_excel_csv("results/pd_E2.csv")
  
  
  
+ ses.MPD_Glo_M1 %>% 
+   mutate (mpd.obs = round (mpd.obs,2) , mpd.rand.mean = round (mpd.rand.mean,2), 
+           mpd.rand.sd = round (mpd.rand.sd,2), mpd.obs.z = round (mpd.obs.z,2), 
+           mpd.obs.p = round (mpd.obs.p,4)) %>%  
+   select (-runs) %>% write_excel_csv("results/mpd_E2.csv")
  
+
+  
  

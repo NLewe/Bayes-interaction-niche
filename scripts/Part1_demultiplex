@@ -1,0 +1,131 @@
+
+# Bioinformatic script for 
+
+Lewe, N & Deslippe JR.  Plant interaction traits determine the composition and biomass of arbuscular mycorrhizal fungi and bacteria in soil
+New Phytologist 2023  xxx
+
+
+
+
+####RUN STEPS 1 TO 5 IN A LINUX TERMINAL (BASH SCRIPT) ########
+
+##Preparation - installation :
+#https://benjjneb.github.io/dada2/dada-installation.html
+##install cutadapt - it needs a Linux environment. 
+# on windows, I used Ubuntu (linux environment) on WSL2 (windows subsystem) to run cutadapt 
+# All demultiplexing was done on the High Performance Computing system "Rapoi" of Victoria University of Wellington (New Zealand).
+
+# The raw sequencing data consisted of the fastq.gz files (called Lib01, lib02, Lib03), each contained the sequence information from up to 38 samples.
+
+# The demultiplexing folows the instructions on 
+https://cutadapt.readthedocs.io/en/stable/guide.html#demultiplexing-paired-end-reads-in-mixed-orientation
+# for combinatorial indices.
+
+#  Lib01  ####
+#Step 1  -- Demultiplex --
+# open a bash terminal in the folder containing the fastq.gz  (e.g. M1Lib01_1.fastq.gz and M1Lib01_2.fastq files) and the fasta files containing information about the barcodes.
+The barcodes are names F1 and F2 for the two barcodes used in the forward primer, and R3 to R21 for the 19 Barcodes attached to a reverse primer. 
+# The demultiplexing step will result in files named after the identified barcode combinations, e.g. F1-R3.1.fastq.gz etc.
+
+ 
+# command for demultiplexing:
+
+cutadapt -e 0 --no-indels -g file:XFWDbarcodes.fasta -G file:XREVbarcodes.fasta -o Lib01/{name1}-{name2}.1.fastq.gz -p Lib01/{name1}-{name2}.2.fastq.gz M1Lib01_1.fastq.gz M1Lib1_2.fastq.gz --minimum-length 1 --overlap 6 >> Lib01_summ_cutadapt.out
+
+# The two fasta files contain the nucleotide sequences used to barcode the forward and reverse primers.
+ 
+
+#  Library 01 is now demultiplexed and the barcodes were removed from the sequences at the same time. 
+# Resulting files are files named based on the identified barcodes, for example F1-R3.1.fastq.gz, others filenames include an "unknown" at one of the positions, i.e. F1-unknown.1.fastq.gz, which indicates that the forward barcode could be identified for the sequences, but no reverse barcode was found. These files will not be used further.
+# Files that are called unknown-unknown.1.fastq.gz and unknown-unknown.2.fastq.gz are demultiplexed again, but using file *.1.fastq.gz at the position of *.2.fastq.gz and vice versa (see Step 2).
+# 
+
+
+
+
+# Step 2 --Demultiplex again --
+
+#the unknown-unknown file is rerun the other way around in the cutadapt script 
+
+# command
+cutadapt -e 0 --no-indels -g file:XFWDbarcodes.fasta -G file:XREVbarcodes.fasta -o Lib01/B{name1}-{name2}.1.fastq.gz -p Lib01/B{name1}-{name2}.2.fastq.gz Lib01/unknown-unknown.2.fastq.gz Lib01/unknown-unknown.1.fastq.gz --minimum-length 1 --overlap 6 >> BLib01_summ_cutadapt.out
+
+#now we have 2 files for the R1 and 2 files for the R2 reads
+#these are merged (concatenated) in bash - see Step 3
+
+
+#Step 3 --Merge --
+# merge the two files from the two demultiplex steps
+
+cd Lib01  # change directory to the folder containing the sample files
+
+mkdir Lib01merged  # make a new directory 
+for i in $(find -type f -name "F*.fastq.gz" | while read F; do basename $F | cut -d . -f 1;done |sort|uniq); do cat "$i".1.fastq.gz B"$i".1.fastq.gz > Lib01merged/"$i".R1.fastq.gz; done
+
+
+#do the same for the reverse files:
+for i in $(find -type f -name "F*.fastq.gz" | while read F; do basename $F | cut -d . -f 1;done |sort|uniq); do cat "$i".2.fastq.gz B"$i".2.fastq.gz > Lib01merged/"$i".R2.fastq.gz; done
+
+#For easier identification of the files, the prefix "Lib01_" is added to each file. This is an optional step which was used here as the dataset contained samples pooled into 19 sequencing libraries with each library containing 38 samples barcoded with 38 barcode combinations (see supplementary Information in Lewe & Deslippe 2023, and xyz.fasta).
+prefix="Lib01_"
+for file in *; do mv "$file" "${prefix}${file}"; done
+
+
+##  these steps are repeated for all sequencing libraries by changing Lib01 into Lib02 (Lib03 etc) in all steps.
+### The resulting files are demultiplexed fastq files. Each fastq file (forward & reverse) contains the sequences obained from one sample.
+#These files are published on NCBI with the accession numbers
+under the project number 
+
+
+
+
+The raw multiplexed files and the needed metainformation of all 19 libraries can be found at:  https://osf.io/jcynz/
+Note that this publication used part of the data from a larger project.
+The files needed here are from Libraries Lib01, Lib02 and some files are found in Lib19 (see meta-table  xxxy 
+
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+
+
+## Primer removal with cutadapt ###
+
+# After demultiplexing of the raw sequence libraries with cutadapt, which removed the barcode sequences whilst demultiplexing,  
+# the primer sequences need to be removed as well
+# A linux environment (bash) with cutadapt installed is again needed for that step.
+
+# First a new directory is made, for example "Lib01_primer_removed"
+
+mkdir Lib01_primer-removed
+
+
+# The resulting files will be added to the new directory Lib01_primer-removed in the next step
+# The command to remove all primer sequences from all files in a folder is:
+
+for i in *.R1.fastq.gz
+do
+SAMPLE=$(echo ${i} | sed "s/.R1\.fastq\.gz//") 
+echo ${SAMPLE}.R1.fastq.gz ${SAMPLE}.R2.fastq.gz 
+cutadapt -m 1 -e 0.12 \
+-g "CAHCGATGAAGAACGYRG;min_overlap=6"  -a "GCATATCAATAAGCGSAGGA;min_overlap=6" \
+-G "TCCTSCGCTTATTGATATGC;min_overlap=6"  -A "CYRCGTTCTTCATCGDTG;min_overlap=6"  \
+-o Lib01_primer_removed/${SAMPLE}.R1.fastq.gz \
+-p Lib01_primer_removed/${SAMPLE}.R2.fastq.gz  ${SAMPLE}.R1.fastq.gz ${SAMPLE}.R2.fastq.gz \
+>> primer_summ.txt
+done
+
+### Notes:
+#  -g is the anchored forward (FWD) primer
+#  -a is the complementary inverse reverse primer.
+#  -G is the anchored reverse (REV) primer
+#  -A is the complementary inverse forward primer
+
+## Explanations on the use of cutadapt can be found in 
+
+https://cutadapt.readthedocs.io/en/stable/guide.html#
+
+# The authors humbly thank the cutadapt developer Marcel Martin https://github.com/marcelm for their amazing work and their thorough manual. 
+
+
+
+
+

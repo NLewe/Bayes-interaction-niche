@@ -73,15 +73,19 @@ for file in *; do mv "$file" "${prefix}${file}"; done
 
 ##  these steps are repeated for all sequencing libraries by changing Lib01 into Lib02 (Lib03 etc) in all steps.
 ### The resulting files are demultiplexed fastq files. Each fastq file (forward & reverse) contains the sequences obained from one sample.
-#These files are published on NCBI with the accession numbers
-under the project number 
+#These files are published and can be downloaded on https://www.ncbi.nlm.nih.gov/home/download/
+using the following ID
+
+BioProject ID:      PRJNA997080 
 
 
 
 
-The raw multiplexed files and the needed metainformation of all 19 libraries can be found at:  https://osf.io/jcynz/
+
+The raw multiplexed files and the needed metainformation of the libraries can be found at:  https://osf.io/jcynz/
 Note that this publication used part of the data from a larger project.
-The files needed here are from Libraries Lib01, Lib02 and some files are found in Lib19 (see meta-table  xxxy 
+The files needed here are from Libraries Lib01, Lib02 and some files are found in Lib19 (see accompaning meta data for details).
+
 
 
 -------------------------------------------------------------------------------------------------------------------------------------------

@@ -11,46 +11,26 @@ library (ggpubr)
 ##data 
 ps_M1_allASVs <- readRDS ("data/ps_M1_allASVs.rds")
 
-#repair meta
-# repairSampledata <- 
-#   sample_data (ps_M1_allASVs) %>%  
-#   data.frame () %>%  
-#   as_tibble (rownames ="sampleID") %>%  
-#   select (!ID) %>% 
-#   left_join (meta_M1Wcontrol %>%  select (sampleID, ID)) %>% 
-#   data.frame (row.names = "sampleID") %>% 
-#   sample_data()
-# 
-# sample_data (ps_M1_allASVs)  <- repairSampledata
-# 
-# saveRDS (ps_M1_allASVs, "data/ps_M1_allASVs.rds")
-
-### Add a new meta column to the data
-# combination of PlaSpe and root/soil, e.g. AchMil-soil, AchMil-roots
-# for use as grouping factor in edgeR!
-ps_edgeR_relGenSpec <- ps_M1_allASVs %>% subset_samples(roots_soil =="soil") #%>%  subset_samples (PlaSpe != "SoiCon")
-
-
+# Subset the ps object for the soil samples (rhizosphere)
+ps_edgeR_relGenSpec <- ps_M1_allASVs %>% subset_samples(roots_soil =="soil") 
+# prune taxa that are not present in those subsetted samples
 ps_edgeR_relGenSpec<- prune_taxa(taxa_sums (ps_edgeR_relGenSpec)>1,ps_edgeR_relGenSpec)
-
-
+# add taxon information to ps object
 corrected_taxTable <- 
   read_csv ("results/testtableTaxonomy.csv") %>% 
-  data.frame (row.names = "ASV_ID") %>%  as.matrix() %>%   tax_table ()
-
-
-# add corrected taxa data tp ps object ####
-
+  data.frame (row.names = "ASV_ID") %>% 
+  as.matrix() %>%   
+  tax_table ()
 tax_table(ps_edgeR_relGenSpec) <- corrected_taxTable
 
 
-# prep sample data - information of ID needed
+# Prepare the sample data - information of ID needed instead of sampleID, 
+# and the values of the relative interaction generalism need to be added
 test2 <- 
   RelGen_E1_E2_sample %>%  
   filter (Exp =="E2") %>%  
   arrange (RelGenSpec) %>% 
- # mutate (GenBins = paste0 ("Bin", rep(1:8, each = 5))) %>% 
-  select (-PlantSpeciesfull, - PlaSpe, -Exp, -PlantFamily) %>%    # these are alread n other tbl
+  select (-PlantSpeciesfull, - PlaSpe, -Exp, -PlantFamily) %>%    # these are already present in table
   left_join (meta_M1Wcontrol %>%  
                select (sampleID,  ID, DW_roots, DW_above), by = "sampleID") %>% 
   select (-sampleID) %>% 
@@ -58,7 +38,7 @@ test2 <-
   mutate (DW_roots = as.numeric (DW_roots), DW_above = as.numeric (DW_above))
 
 
-
+# Change the sample data of the ps object to sample data that includes the relative interaction generalism
 new_sampledata_gen <- 
   sample_data (ps_edgeR_relGenSpec) %>% 
   data.frame () %>% 
@@ -70,27 +50,12 @@ data.frame (row.names = "sampleID") %>%
   sample_data()
 sample_data(ps_edgeR_relGenSpec)  <- new_sampledata_gen
 
-## different version of medelling - generalism as variable 
-
-# Test correlations of predictors #####
-RelGen_E1_E2_sample %>% anova_test (RelGenSpec ~ PlantSpeciesfull)
-# Then all of the models are wrong - using root biomass shoot biomass and PlaSpe 
-#as predictors in model also .... but I want to know which of them explain how much of the 
-# changes in AMF abundance or biomass.
-
-# compare means##
-  RelGen_E1_E2_sample %>%  games_howell_test (RelGenSpec~ PlantSpeciesfull)  %>% view()
-
-
-#Gen_table  <-  factor(new_sampledata_gen$GenBins)
-
-
-# at genus level - needed for Tree building and taxon names
+# Prepare a ps object for building a ree for a figure
+# for that, the taxa are agglomerated at the genus level.
 ps_edgeR_genus <- tax_glom(ps_edgeR_relGenSpec, taxrank = "Genus", NArm = F)
 
-#Object for edgeR ##
-# rows OTUs, columns = samples
-# get the count table as  df
+# Prepare a dataframe from the ASV table for the use in package edgeR ##
+# rows are OTUs, columns = samples
 df <- otu_table(ps_edgeR_relGenSpec) %>%  
   data.frame ()
 
@@ -384,7 +349,7 @@ ps_edgeR_glo_genus <- prune_taxa (taxa_sums(ps_edgeR_glo_genus)>=1,
                                   ps_edgeR_glo_genus) %>%  
   taxa_prune("ASV_3007")
 
-# get the tree data
+# get the tree data ####
 MyTree <-    ps_edgeR_glo_genus %>% phy_tree
 
 
@@ -433,7 +398,7 @@ order_taxa <- get_taxa_name(p) %>%
   as_tibble () %>% 
   dplyr::rename ("ASV_ID" = "value") %>%  
   left_join (taxa_names) %>% 
-  add_column (order = c(1:18))
+  add_column (order = c(1:17))
 
 # get relative abundances for the ASVs for later use in the DAA plot
 ps_edgeR_glo_ASV <- subset_taxa(ps_edgeR_relGenSpec, Phylum == "Glomeromycota")
@@ -471,12 +436,13 @@ rel_ASV_abundance_soil <-
 # add information on relative abundance of the ASVs per Glo community!
 # add genus label
 DAA <- 
-  bind_rows (DAA_fittest1_table, DAA_fittest2_table, DAA_fittest3_table, DAA_fittest4_table,
-                 DAA_fittest5_table, DAA_fittest6_table, DAA_fittest7_table, DAA_fittest8_table, DAA_fittest9_table) %>%  
+  bind_rows (DAA_fittest1_table, DAA_fittest_RelGenSpec_table, DAA_fittest3_table, DAA_fittest4_table,
+                 DAA_fittest5_table, DAA_fittest6_table, DAA_fittest7_table, DAA_fittest8_table, DAA_fittest9_table)  %>%  
  # DAA_fitBin1_table %>% 
   left_join (order_taxa %>% select (Order, GenusLabel, order), by = "GenusLabel") %>% 
-  left_join (rel_ASV_abundance_soil)  %>% 
-  filter (!is.na (mean_rel_ASV))  # remove all rel abundances and logFC that have 0 abundance in the respective PlaSpe
+  left_join (rel_ASV_abundance_soil) 
+#%>% 
+ # filter (!is.na (mean_rel_ASV))  # remove all rel abundances and logFC that have 0 abundance in the respective PlaSpe
 
 ## make a dummy df to add a blank geom to the DAA plot (without it, some of the 
 # AMF genera are mssing in the DAA plot

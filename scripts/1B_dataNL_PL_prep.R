@@ -1,4 +1,4 @@
-## Phylogenetic informed analysis####
+## data NL and PL preparation ####
 
 
 # packages #####
@@ -109,62 +109,93 @@ ps_ALL_E1_8Sp_perPlaSpe  <- merge_samples(ps_ALL_E1_8Sp, group = "PlantSpeciesfu
 #make df for Glo_PlaSpe data (empty samples samples pruned )
 comm_df_ALL_E1_8Sp_PlaSpe  <- data.frame (otu_table (ps_ALL_E1_8Sp_perPlaSpe))### needs ps with all asvs only 8plants)) 
 
+library (iNEXT)
 #rarefaction in iNEXT 
-iNext_ALL_E1_8_sp_PlaSpe_richness <- iNEXT (t (comm_df_ALL_E1_8Sp_PlaSpe), 
-                                    q= 0, # richness
-                                    datatype =  "abundance", 
-                                    endpoint = NULL, 
-                                    knots = 400 )
-# plot 
-p1 <- ggiNEXT(iNext_ALL_E1_8_sp_PlaSpe_richness, type = 1) +
-  theme_classic() + 
-  scale_shape_manual(values = c(0,1, 2,3,4,5,6,7)) + 
-  scale_y_continuous (name = "ASV richness") +
-  scale_x_continuous(name = "Number of sequence reads")+
-  theme (axis.text = element_text(size =14), 
-         axis.title = element_text(size =18),
-         legend.text = element_text(face = "italic"))+
-  guides(     colour=guide_legend(title="Plant species"), 
-              fill=guide_legend(title="Plant species"), 
-              shape=guide_legend(title="Plant species"))
+# iNext_ALL_E1_8_sp_PlaSpe_richness <- iNEXT (t (comm_df_ALL_E1_8Sp_PlaSpe), 
+#                                     q= 0, # richness
+#                                     datatype =  "abundance", 
+#                                     endpoint = NULL, 
+#                                     knots = 400 )
+# 
+# write_rds(iNext_ALL_E1_8_sp_PlaSpe_richness, "results/iNext_ALL_E1_8_sp_PlaSpe_richness.rds")
+# # plot 
+# p1 <- ggiNEXT(iNext_ALL_E1_8_sp_PlaSpe_richness, type = 1) +
+#   theme_classic() + 
+#   scale_shape_manual(values = c(0,1, 2,3,4,5,6,7)) + 
+#   scale_y_continuous (name = "ASV richness") +
+#   scale_x_continuous(name = "Number of sequence reads")+
+#   theme (axis.text = element_text(size =14), 
+#          axis.title = element_text(size =18),
+#          legend.text = element_text(face = "italic"))+
+#   guides(     colour=guide_legend(title="Plant species"), 
+#               fill=guide_legend(title="Plant species"), 
+#               shape=guide_legend(title="Plant species"))
+# 
+# 
+# p2 <- ggiNEXT(iNext_ALL_E1_8_sp_PlaSpe_richness, type = 2) +
+#   theme_classic() + 
+#   scale_shape_manual(values = c(0,1, 2,3,4,5,6,7)) + 
+#   scale_x_continuous(name = "Number of sequence reads")+
+#   theme (axis.text = element_text(size =14), 
+#          axis.title = element_text(size =18), 
+#          legend.text = element_text(face = "italic"))+
+#   guides(     colour=guide_legend(title="Plant species"), 
+#               fill=guide_legend(title="Plant species"), 
+#               shape=guide_legend(title="Plant species"))
+
+# p3 <- ggiNEXT(iNext_ALL_E1_8_sp_PlaSpe_richness, type = 3) +
+#   theme_classic() + 
+#   scale_shape_manual(values = c(0,1, 2,3,4,5,6,7)) + 
+#   scale_y_continuous(name = "ASV richness")+
+#   scale_x_continuous (labels = scales::percent) + 
+#   theme (axis.text = element_text(size =14), 
+#          axis.title = element_text(size =18),  
+#          legend.text = element_text(face = "italic"))+
+#   guides(     colour=guide_legend(title="Plant species"), 
+#               fill=guide_legend(title="Plant species"), 
+#               shape=guide_legend(title="Plant species"))
 
 
-p2 <- ggiNEXT(iNext_ALL_E1_8_sp_PlaSpe_richness, type = 2) +
-  theme_classic() + 
-  scale_shape_manual(values = c(0,1, 2,3,4,5,6,7)) + 
-  scale_x_continuous(name = "Number of sequence reads")+
-  theme (axis.text = element_text(size =14), 
-         axis.title = element_text(size =18), 
-         legend.text = element_text(face = "italic"))+
-  guides(     colour=guide_legend(title="Plant species"), 
-              fill=guide_legend(title="Plant species"), 
-              shape=guide_legend(title="Plant species"))
 
-p3 <- ggiNEXT(iNext_ALL_E1_8_sp_PlaSpe_richness, type = 3) +
-  theme_classic() + 
-  scale_shape_manual(values = c(0,1, 2,3,4,5,6,7)) + 
-  scale_y_continuous(name = "ASV richness")+
-  scale_x_continuous (labels = scales::percent) + 
-  theme (axis.text = element_text(size =14), 
-         axis.title = element_text(size =18),  
-         legend.text = element_text(face = "italic"))+
-  guides(     colour=guide_legend(title="Plant species"), 
-              fill=guide_legend(title="Plant species"), 
-              shape=guide_legend(title="Plant species"))
 
-ggarrange (p1,p2,p3, ncol = 3, common.legend = T, labels = "AUTO", legend = "bottom")
+### rarefy results?###
+
 
 ### AMF families description ####
+Glo_total_counts_E1_8Sp  <-ASV_table_Glo  %>%  
+  select (-c(Kingdom, Phylum, Class, Order, Genus, Species))  %>%  
+  pivot_longer (!c(Family, ASV_ID), names_to = "sampleID", values_to="counts")  %>%
+  summarize(total=sum(across(counts)))
+
+
+
 Glo_Fam_perc_reads_E1_8Sp  <- 
   ASV_table_Glo  %>%  
   select (-c(Kingdom, Phylum, Class, Order, Genus, Species))  %>%  
   pivot_longer (!c(Family, ASV_ID), names_to = "sampleID", values_to="counts")  %>%
   group_by (Family)  %>% 
   summarize(Fam_sum=sum(counts)) %>% 
-  add_column (Glo_total_counts)  %>% 
+  add_column (Glo_total_counts_E1_8Sp)  %>% 
   mutate (Glo_Fam_perc = 100  * Fam_sum/total)  %>% 
   arrange(desc(Fam_sum))  %>% 
   as.data.frame()
 
+ASV_table_Glo  %>%  
+  select (-c(Kingdom, Phylum, Class, Order, Genus, Species))  %>%  
+  pivot_longer (!c(Family, ASV_ID), names_to = "sampleID", values_to="counts")  %>%
+  group_by (Family) %>%  select (-sampleID) %>% filter (counts!= 0) %>% 
+  select (-counts) %>%  unique () %>%
+  group_by(Family ) %>%  tally ()
+ 
+ASV_table_Glo  %>%  
+  select (-c(Kingdom, Phylum, Class, Order, Genus, Species))  %>%  
+  pivot_longer (!c(Family, ASV_ID), names_to = "sampleID", values_to="counts") %>% 
+  select (-Family) %>% filter (counts!=0) %>% 
+  group_by (sampleID)  %>% 
+  tally () %>% 
+  summarize (meanASV = mean (n))
 
-                                
+
+%>%
+  group_by (Family) %>%  select (-sampleID) %>% filter (counts!= 0) %>% select (-counts) %>% 
+  unique () %>% group_by(Family ) %>%  tally ()                              

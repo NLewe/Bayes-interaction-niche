@@ -7,6 +7,7 @@ library(phyloseq)
 library (vegan)
 library (picante)
 library (readxl)
+library (rstatix)
 # data# ####
 
 
@@ -151,8 +152,8 @@ comp_units   <- meannumberASVsper_species  %>%
   left_join(uniqueASVsperPlaSpe)  %>% 
   left_join (replicates_samples_after_Glo) %>% 
   group_by (PlantSpeciesfull) %>% 
-  mutate (unique = mean(uniqueASVsperPlSpe)) %>% 
-  mutate (CUnits = 1* unique/(mean_n_ASV_per_species*repl)) %>% # repl adjusted for , times 5 to get back to number of 5 replicates 
+  mutate (unique = mean(uniqueASVsperPlSpe)) %>% ## check!! Is that correct??? ###
+  mutate (CUnits = 1* unique/(mean_n_ASV_per_species*repl)) %>% # repl adjusted for , times 5 to get back to number of 5 replicates ## I don't think that should be used
   mutate ("1-CU" = 1 - CUnits) 
 
 
@@ -269,13 +270,13 @@ All_metrics_E1_samples <-
   adiv_richness %>% 
   left_join(metaM0)  %>%  
   group_by(PlantSpeciesfull, PlaSpe)  %>% 
-  select (sampleID, Chao1, Shannon) %>% 
-  left_join (comp_units %>% select (!repl) %>% select (!"1-CU")) %>%   #includes CU and unique and richness
+  select (sampleID, Chao1, Shannon, Observed) %>% 
+  left_join (comp_units %>% select (!c(repl,mean_n_ASV_per_species )) %>% select (!"1-CU")) %>%   #includes CU and unique and richness
   left_join(cores) %>% 
   select (!c(PlantType, Chao1, unique))  %>% 
   left_join (stand_pd_Glo_all %>% select (sampleID, pd.obs)) %>% 
   left_join (ses.MPD_Glo %>%  select (sampleID, mpd.obs) )  %>% 
-  dplyr::rename("Richness"= "mean_n_ASV_per_species", "CU" = "CUnits", "β(core)"  = "perc_core",
+  dplyr::rename("Richness"= "Observed", "CU" = "CUnits", "β(core)"  = "perc_core",
                 "PD" = "pd.obs", "MPD" = "mpd.obs", "uniqueASV" = "uniqueASVsperPlSpe" )  %>% 
   add_column (Exp = "E1") 
 
@@ -615,6 +616,9 @@ A <- ape::vcv.phylo(treeML)
            mpd.obs.p = round (mpd.obs.p,4)) %>%  
    select (-runs) %>% write_excel_csv("results/mpd_E2.csv")
  
-
+## correlations between biomass and RG?? ####
+ 
+dataNLPL %>% mutate (totDW = DW_roots + DW_above) %>% ungroup () %>%  cor_test (RelGenSpec, totDW)
   
+ dataNLPL %>% mutate (totDW = DW_roots + DW_above) %>% ungroup () %>%  cor_test (RelGenSpec, DW_above   )
  

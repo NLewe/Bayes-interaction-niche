@@ -1,0 +1,1413 @@
+---
+title: "Ch4 Community and priority effects on the interaction niche of a focal plant "
+author: "Natascha Lewe"
+date: "20/06/2022"
+output:
+  word_document2:
+    number_sections: yes
+    toc_depth: 3
+    reference_docx: bib/Test.docx
+bibliography: testbookdown/20220513bib.bibtex
+csl: bib/apa.csl
+---
+
+
+```{r setup, echo=FALSE, message=FALSE}
+
+knitr::opts_knit$set(root.dir = "C:/Users/Nat/OneDrive - Victoria University of Wellington - STAFF/PhD/Results/Marsden1/Marsden_1_2 roots/R/M1_2_NLFA")  # set root directory
+knitr::opts_chunk$set(echo = FALSE, message=FALSE, warning=FALSE, dpi = 300)
+options (ignore.negative.edge=TRUE)  ## for the tree
+```
+
+```{r libraries, echo=FALSE, message=FALSE}
+library(bookdown)
+library(kableExtra) #https://cran.r-project.org/web/packages/kableExtra/vignettes/awesome_table_in_html.html
+library(tidyverse) # the most important package in the universe
+library(readxl)
+library(ggplot2)
+library (flextable)
+library(ggpubr)
+library(phyloseq)
+library(phylosmith)
+library (broom) #needed for tidy linear modelling
+library(rstatix)
+library(FactoMineR) # simple ordinations
+library(factoextra)
+library (rmarkdown)
+library (ggsignif) # adds signif to ggplot
+library (lme4)
+library (nlme)
+library (broom) # for pretty lm tables
+library(broom.mixed) # for pretty mixed model tables
+library (wPerm) #permutation ANOVA etc
+library(paletteer) 
+library (iNEXT)
+library (metagMisc)
+library(edgeR)
+library (limma)
+library (Glimma)
+library (ape)
+library (stats)
+library (ggtree)
+library (lmerTest)
+library (bipartite)
+library (grid)
+library(gridExtra)
+library(picante)
+library (reshape2)
+library(ggrepel)
+```
+
+```{r data}
+
+meta_plants  <- read_xlsx("data/metadata_M2_soil.xlsx", sheet = "meta_plants") %>% unique()
+
+```
+
+
+# Community and priority effects on the interaction niche of focal plant species
+
+
+## Introduction
+
+Several influences determine the AMF community of plant species, like the available AMF pool, environmental conditions and plant neighbours [@Bouffaud2017; @Davison2016]. The AMF pool varies across ecosystems, climate zones and along soil edaphic factors, such as pH and water [@Sousa2018; @Hazard2012; @Oepik2006]. A plant’s root AMF community, however, contains a selection of this AMF pool, filtered according to the plant’s inherent interaction traits, and impacted by the abiotic conditions at the time of the colonisation [@Vandenkoornhuyse2003; @Geel2018; @Torrecillas2012]. For example, the number of plant-AMF interactions often increase under P-deficiency conditions, resulting, in turn, in higher carbon allocation to the mycorrhizal partner [@Akiyama2002; @Olsson1997]. Although some plants might favour AMF associates by preferential allocation of carbon to more competitive AMF [@Kiers2011], plants are thought to not strongly sanction inferior mutualists [@Veresoglou2012; @Bever2009]. As a result, generalist plants might also host AMF "cheaters", which benefit from the plant interaction without contributing to the host nutrition [@Veresoglou2012]. Nonetheless, that plant species differ in their response to and interactions with AMF indicates that some degree of plant host control of the AM mycorrhization exists [@Vandenkoornhuyse2003]. In addition to these abiotic and inherent host plant’s effects on its AMF community, neighbouring plants of the plant community can also induce changes in a focal plant’s AMF community [@Mony2021; @Hausmann2009]. The relative strength of these neighbouring effects on individual plant species’ AMF community assembly is still poorly understood.
+
+### Plant neighbourhood affects root AMF communities
+That neighbouring plants influence the AMF community of a focal plant has been demonstrated in natural grasslands [@Mummey2005], and also by manipulative experiments [@Mony2021; @Hausmann2009]. However, these studies are limited to examining the effect of single plant neighbours on the AMF community of a focal plant [@Bittebiere2020], or on the effect of a single invasive plant on the AMF communities of neighbouring native grasses [@Mummey2005]. There seems to be consensus that neighbours at small distances can affect the AMF assemblage of a focal plant, and that these effects depend on the identity of the neighbouring plant species [@Hausmann2009; @Hausmann2010; @Mony2021]. Plant neighbourhood affects the AMF richness and community composition of focal species [@Bittebiere2020; @Mummey2005]. Depending on the identities of the neighbour and focal plant, these effects can be either controlling, i.e., skewing the AMF community towards that of the neighbour plant, or synergistic, i.e., creating an AMF composition novel to both plant species [@Hausmann2009]. Taken together, these findings clearly indicate that plant species differ in the relative strength they exert on the AMF assembly of a focal plant species. There is, however, no clear picture of how plants of different interaction traits with AMF are impacted by neighbourhood effects. For example, a plant with more selective power over its AMF assembly processes, which, for example, selects a phylogenetic clustered AMF community might get less impacted than a plant with less host selectivity. This might result in the creation of a novel root AMF composition for the phylogenetic generalist plant but less so for the phylogenetic specialist [@Hausmann2009]. How the relative contributions of focal plant host and neighbourhood plants to this plant-mediated control of the AMF root community might be impacted by stochastic effects, for example, the order of arrival of these plant species, is currently not well explored.
+
+Plant neighbours can impact the root AMF assembly processes of a host plant by several mechanisms. 
+These are either indirect influences, i.e., mediated via root exudates, or direct impacts that change the available AMF pool. 
+Over short distances, root exudates can reach other plants and impact on their interaction with AMF and other microbes [@Canarini2019]. 
+Root exudates are a complex mix of compounds including signalling molecules that affect AMF spore germination, hyphal growth [@Akiyama2005] and the initiation of the plant-AMF interaction [@Mandelbaum2000; @Mueller2019]. 
+Studies on the influence of root exudates from colonised and non-colonised mycorrhizal plants demonstrated that non-colonised plants’ root exudates have a stimulatory effect on root colonisation, whereas those from colonised plants slightly inhibit further colonisation [@Vierheilig2003]. 
+Furthermore, those AMF that are preferentially allocated carbon from the host plant can develop extensive hyphal and sporoid structures [@Kiers2011], subsequently increasing their probability of infection of new plant roots. Because the root AMF community is recruited from the available infectious structures like AMF spores, hyphae and colonised root fragments [@Friese1991], those AMF with extensive hyphal networks are more likely to colonise new plant roots [@Pueschel2021]. In this way members of a plant community are interconnected by a common mycorrhizal network (CMN), where AM fungi interact with multiple plants simultaneously [@Heijden2009; @Buecking2016]. 
+Plants arriving in an already established plant-AMF community can benefit if they connect to the CMN without investment of carbon for its development [@Heijden2009]. The fungi in the network, however, profit from their access to multiple plant partners by discriminating between better plant hosts [@Argueello2016; @Wyatt2014; @Werner2015]. 
+As a result, these fungi might increase their colonisation of plants within their CMN, while decreasing the interaction with other plants of less mutualistic value, leading to shifts in the root AMF communities after arrival of new plant species. Knowing how plant species of diverse AMF interaction niche strategies are impacted by the influence of their plant neighbours will help elucidate the assembly processes of the AMF root community further.
+
+
+### Priority effects on root AMF assembly
+
+The order of a species’ arrival can affect its establishment, growth and interactions, and these priority effects can lead to strong impacts on the productivity and biodiversity of an ecosystem [@Weidlich2017]. 
+Early arriving plants benefit from higher resource abundance, such as soil nutrient availability and space, which may enable them to suppress late arrivals due to their higher competitiveness [@Chesson2000]. In obligate mutualistic interactions, like between plants and AMF, the order of arrival of the members from one guild affects the composition of the other guild and can result in a changed community composition for both guilds [@Ponisio2019]. In early successional stages of an ecosystem, the early arriving plant species change the abundances and composition of the soil mycorrhizal fungi [@Semchenko2018], therefore affecting the root AMF assembly of later plant species with possible effects on the assembly of the plant community [@Gao2019; @GarciadeLeon2016]. Analogously to the mechanisms involved in the neighbourhood effect, early arrivals induce changes in the soil microbial community by several mechanisms; even plants already removed from the community can still exert impact on their successors via so called soil legacy effects [@Bever2012; @Heinen2020]. 
+For example, compounds from plant root exudates that inhibit the formation of a mycorrhizal interaction have been described as well as such initializing root colonisation [@Lanfranco2018; @Vierheilig2003; @Stinson2006]. 
+Their accumulation in the soil could lead to a change in the mycorrhizal status of the later arriving plant species. Mycorrhizal plants are colonised quickly after arrival, colonisation of plants in an established mycorrhizal network, for example, takes place within days. 
+Taken together with the described host effect of plant species, i.e., their tendency to differ in interaction niche properties, this could result in priority effects of varying strength. If, for example, a plant that interacts with few, selected AMF has priority in the ecosystem, the establishment of its AMF network could impede subsequent root colonisation of following plants [@Hausmann2009]. In contrast, an early arriving generalist plant establishes a mycorrhizal network in which later plants - both generalist and specialists - could be integrated if their interaction niches overlap [@Ponisio2019]. While most of the studies on priority effect concentrated on the impacts of an early arrival, the late arrivals exert an influence on the established plants as well. For example, plant invaders that are AMF generalists are able to change the AMF community of established plants to a certain degree [@Mummey2005]. It is, however, unclear how these priority effects are influenced by the inherent interaction traits of the focal plant.
+
+
+### Aims of this study
+
+The aim of this chapter was to examine the interplay between neighbourhood and priority effects on the interaction with AMF of a focal plant species. 
+Plant neighbours in a plant community exert an influence on the AMF community of a focal plant, but the relative strength of this influence might vary with the order of arrival of the focal plant and its inherent interaction traits. 
+For example, plants differ in their interactions with AMF regarding the numeric and phylogenetic diversity of their AMF associates, i.e., they can be generalists or specialists in their interaction strategy. 
+Whether the inherent interaction niche properties of hosts govern priority effects is currently unknown, but theory predicts that the difference in selectivity in the AMF interaction exhibited by these plants would also influence their susceptibility to priority effects. Therefore, I hypothesise that the relative effect of plant community and priority of arrival on a focal plant’s interaction niche with AMF varies according to the plants’ interaction strategy. 
+Specifically, I hypothesise **Hyp 1**: Focal plants that are more selective in their AMF assembly, as indicated by phylogenetic clustering of their AMF communities as well as low numeric $\beta$-diversities, will be less impacted by neighbourhood and priority effects than plants of low selectivity. 
+**Hyp 2**: Furthermore, because of the increase in host plant diversity due to the addition of a plant community to a single focal plant, I anticipate an increase in the AMF richness in all focal plant species. 
+
+To test these hypotheses, mesocosms of plant communities of eight plant species of differing interaction niche properties with AMF were built. For each plant species, three treatments were applied: 1) focal plant grown alone (single treatment), 2) focal plant established before a plant community (BC), and 3) focal plant seedling added after the established plant community (AC). For each focal plant species, the fungal community was determined by sequencing and the resulting AMF communities compared. By comparing the effect of the AC, respectively BC treatment to the single treatment, the influence of the plant community on the AMF community of the focal plant (neighbourhood effect) would be partitioned from the priority effect. The results are further discussed in the framework of the interaction niche properties of the plant species. 
+
+\newpage
+
+
+## Method
+
+### Glasshouse experiment and harvest 
+
+Using field-collected soil and one individual of each of eight plant species co-occurring within a pasture plant community, mesocosms of all eight plant species were constructed in replicates of six and grown in a glasshouse. At harvest, five mesocosms were randomly chosen, and soil samples were taken for detection of biomarker fatty acids (FAs) to determine the biomass of the microbial community. After DNA extraction from the plant roots, metabarcoding of the ITS2 region was applied to describe the AMF composition of each plant individual. 
+
+#### Plant species and soil preparation
+In short, field collected soil was air dried, sieved and mixed with sand in a one to three ratio. For each of the 16 treatments, 6 replicate 10 L pots were filled with 7 L of the soil-sand mixture.
+A table of the eight plant species can be found in Chapter 3 as well as a detailed description of the soil collection and preparation of the soil mixture. 
+
+#### Seedling growth and planting of mesocosm
+
+```{r ACBC-drawing, fig.cap = "Conceptional figure of the experiment. Each mesocosm consisted of one individual each of eight different plant species planted in a 10 L plant pot. The plant of interest (focal plant) - was planted in the centre of the pot either 4 weeks before the rest of the plant community (BC = before community) or 4 weeks after the plant community of the remaining seven species. Plants are coloured by plant family; yellow = Asteraceae, green = Poaceae, blue = Plantaginaceae. Abbrevations see table 3.1."}
+
+knitr::include_graphics('figures/AC_BC_drawing.png')
+```
+
+Each mesocosm experiment consisted of one individual of each of the eight plant species (Table \@ref(tab:plant-table)) which were planted in two stages. 
+Two treatments for each of the eight plants existed (Fig. \@ref(fig:ACBC-drawing)): In the "BC" treatment (BC = before community) a seedling of the plant species of interest (focal plant) was planted in the centre of the pot, i.e., before the plant community consisting of the remaining seven species. The AC treatment  (AC = after community) had the community of seven different plants established first, and a seedling of the focal plant was added at a later date (4 weeks later) to the centre of each pot. For all plants at both time points, seedlings were prepared as described in detail in Chapter 3. The eight chosen plant species represented a balanced mixture of different plant-AMF interaction niche strategies. This was done to examine how the net priority effects on the microbial community vary among plants of different interaction properties with AMF.
+
+#### Harvest and sample preparation
+
+All steps of the glasshouse experiment and harvest were carried out as described in chapter 3 with the following exception: Because the plants' roots from the plant community mesocosms could not completely be separated, no measures of root biomass were taken. In short, the plant biomass was determined by oven-drying and weighing each individual's aboveground biomass. Roots were thoroughly cleaned to remove all soil particles and were kept frozen until further processing for DNA extraction. Soil samples were taken from each pot after removal of the roots and thorough mixing of the soil. Soil was then freeze-dryed and kept frozen at -20° C until further processing. 
+
+### DNA extraction, PCR and sequencing
+
+Roots were cut, homogenised and the DNA extracted by CTAB extraction. 
+The internal transcribed spacer 2 (ITS2) region of the extracted DNA was then amplified by polymerase chain reaction (PCR) using the modified primers ITS3 and ITS4 after Tedersoo *et al.* [-@Tedersoo2014] under the conditions described in chapter 3. The concentration and quality of the PCR products were determined by UV gel imaging after gel electrophoresis. Because the primers contained different barcodes that resulted in 38 possible barcode-combinations (Table \@ref(tab:primer-table)), 38 samples were pooled according to their primer barcode combinations and sent to sequencing using a Illumina sequencer to generate paired-end reads of 300 bp length. 
+
+### Bioinformatics: Processing of the raw sequence reads and identification of fungal sequences
+
+The sequencing libraries were demultiplexed and the barcoded primer sequences removed using *cutadapt* v3.2 on the Rāpoi High Performance Compute Cluster from Victoria University of Wellington (New Zealand). All following steps were carried out in `r R.version.string`. 
+The DADA2 ITS pipeline 1.18 ([https://benjjneb.github.io/dada2/ITS_workflow.html](https://benjjneb.github.io/dada2/ITS_workflow.html)) was applied to the paired-end sequences to perform quality checks, merging and filtering of the reads [@Callahan2016]. 
+Because pooling of samples before sequencing results in lower sequencing depth per sample, the sensitivity of the DADA2 sample inference step was increased by including the pseudo-pooling mode of the method. In pseudo-pooling, each sample is compared to the whole set of the identified ASVs again to identify rare reads. After this step, chimeric reads were discarded.
+
+To identify the fungal sequences, the UNITE reference database 8.3 was applied based on naïve Bayes-trained fungal ITS classifiers. 
+A phylogenetic tree was then built by first aligning the sequences using *ClustalW* and following neighbour-joining tree construction. 
+The sampling completeness was tested for a subset of 40 samples (of 720) by calculating sampling completeness curves in *iNEXT* `r packageVersion ("iNEXT")`. More details on the bioinformatics steps can be found in Chapter 3. 
+
+
+### Statistical analysis
+
+To examine if and how the impact of a neighbouring plant community on the AMF assembly of a focal plant depended on the order of arrival of the plants and on a focal plants' interaction niche properties, two separate effects were considered. 
+Firstly, I determined the impact of the plant community on the interaction niche properties of each focal plant with AMF, and how that impact was influenced by the order of arrival. 
+Secondly, I examined the impacts of plant neighbourhood and order of arrival on the AMF community composition by calculating absolute changes in the AMF abundances relative to the order of arrival, and compared these by interaction strategy with AMF. By including the AMF community of each species grown alone, I was able to partition the net effect of priority from those of the neighbouring plants.  
+
+```{r skizze, fig.cap = "Conceptional figure explaining the partitioning into net priority effect and impact of the plant community on the interaction niche properties of a focal plant species. ED = Euclidean distance calculated to detect the change in the interaction niche properties by plant species."}
+knitr::include_graphics('figures/net_priority_skizze.png')
+```
+
+
+#### Examination of the priority effect in plant AMF-interaction niches of different plant species
+
+The interaction niche properties of a plant species regarding its AMF community are based on several numeric and phylogenetic metrics of $\alpha$- and $\beta$-diversity (richness  S, unique ASVs, Shannon’s diversity H’, Chao1 diversity, Faith’s phylogenetic diversity (PD), mean phylogenetic diversity (MPD), percentage of core AMF species ($\beta$~core~) and compositional units (CU)). Taken together, they describe the plants' status as a generalist or specialist in its interaction with AMF, i.e., its interaction strategy. 
+For each treatment, i.e., for each focal plant at both arrival treatments AC and BC and for the single grown plant, the interaction niche properties were calculated as described in Chapter 2. Each of these properties was then z-score standardised using the scale function in R package *base* `r packageVersion ("base")`. For each plant species, the Euclidean distances between the interaction niche properties were then calculated for each pair of AC, BC and single grown treatment. The Euclidean distance between the AC treatment *versus* the single plant treatment describes the relative influence of the established plant community on the AMF community of the later arriving focal plant while the distance between the BC and single plant treatments depicts the relative influence a later arriving plant community has on an already established focal plant (Fig. \@ref(fig:skizze)). 
+In addition, the distance between the AC and BC treatments accounts for the influence of the plant community but describes the net priority effect. To determine which of the focal plants' interaction niche properties were significantly influenced, the means between the three treatments AC, BC and single plant were compared by calculating two-sample t-tests (R package *rstatix* `r packageVersion ("rstatix")`).
+
+
+#### Determination of the priority effect on fungal abundance by differential abundance analysis (DAA) 
+
+Differential abundance analysis (DAA) was used to identify significant changes in AMF taxon abundance between the AC and the single plant treatments and between the BC and the single plant treatments across the eight different focal plant species. For DAA, the R package *edgeR* v`r packageVersion ("edgeR")` [@Robinson2010] was used following the *edgeR* user's guide from May 2021 [@Chen2021edgeR]. First, ASVs with low counts were filtered from the raw data using standard parameters, including the treatment groups as the grouping factor. Each group consisted of all replicates per plant species and treatment (AC, BC, single plant) for the root samples. Next, a scaling factor was computed to account for the differences in sequencing read depth among the samples. 
+The dispersion was then estimated by applying the empirical Bayes method for each ASV and negative binomial generalised linear models (GLM) were fitted. 
+Differential abundant ASVs between each pair of the treatments per plant were identified by quasi-likelihood F-tests, resulting in a *p*-value and associated log~2~-fold change per ASV for each comparison (for example, *P. cita's* AMF community composition in the AC treatment compared to that of the BC treatment etc.).
+
+
+```{r data-import-sequences, echo=FALSE, message=FALSE, warning=FALSE}
+
+
+
+# meta 
+meta_M1Wcontrol<- read_xlsx("data/meta_M1Wcontrol.xlsx")%>%  mutate (DW_roots = as.double(DW_roots), DW_above = as.double(DW_above))
+meta_M2 <- read_xlsx ("data/M2_data/meta_table.xlsx") %>% 
+  filter (AC.BC == "AC"| AC.BC == "BC") %>% 
+  select (!c(Primer.comb, Lib)) 
+
+meta_all  <- read_xlsx ("data/M2_data/meta_table.xlsx") %>% 
+  select (!c(Primer.comb, Lib)) 
+
+
+#meta_M2
+#%>%    mutate (sampleID = str_c ("X", sampleID, sep = ""))
+meta_M1 <- 
+  meta_M1Wcontrol %>%  
+  filter (AC.BC == "M1")
+
+
+#phyloseq####
+ps_M1  <- readRDS ("data/ps_M1.rds") # only GLO   I got this file from running ALL 19 libraries together! Then subsetting for M1.
+ps_M1 <- prune_samples (sample_sums(ps_M1)>=1, ps_M1)
+# add sample data 
+sample_data (ps_M1) <- sample_data (data.frame (meta_M1, row.names = "sampleID"))
+
+# other PS objects
+ps_control  <- readRDS ("data/ps_control.rds")
+ps_ALL <- readRDS ("data/M2_data/ps_ALL.rds")  ## inlcudes ALL samples, ALL ASVs
+sample_data (ps_ALL) <- sample_data (data.frame (meta_all, row.names = "sampleID"))
+ps_ALL  <- prune_samples (sample_sums(ps_ALL)>=1, ps_ALL)
+ps_ALL  <- prune_taxa(taxa_sums(ps_ALL)>=1, ps_ALL)
+
+ps_M2_allASVs <- subset_samples(ps_ALL, AC.BC != "M1")
+ps_M2_allASVs <- subset_samples(ps_M2_allASVs, AC.BC != "control")
+
+
+## ps_M2 has only Glomeromycota
+ps_M2 <- subset_taxa(ps_M2_allASVs, Phylum=="Glomeromycota")
+#ps_M1_allASVs <- subset_samples (ps_ALL, AC.BC == "M1")
+#
+sample_data (ps_M2) <- sample_data (data.frame (meta_M2, row.names = "sampleID"))
+ps_M2  <- prune_samples (sample_sums(ps_M2)>=1, ps_M2)
+ps_M2  <- prune_taxa(taxa_sums(ps_M2)>=1, ps_M2)
+
+
+
+# track reads####
+track_reads_M2  <- read_csv("data/M2_data/track_reads_ALL.csv") %>%  
+  left_join (meta_all) %>% 
+  filter (AC.BC != "M1" & AC.BC != "control") 
+
+#Input reads M2
+input_M2 <- track_reads_M2 %>% summarise(input_all =sum (input))
+no_chim_M2 <-track_reads_M2 %>% summarise(input_all =sum (nonchim))
+# Average 
+ave_input_M2 <- track_reads_M2 %>%  summarise(ave_reads= mean(input))
+ave_nochim_M2  <- track_reads_M2 %>%  summarise(ave_reads= mean(nonchim))
+
+# number of ASVs before removal of non-Glomeromycota
+No.ASVs_M2<- estimate_richness(ps_M2_allASVs,measures = "Observed") %>% 
+  as_tibble (rownames = "sampleID")
+# mean number of ASvs per sample before removal of non_glo
+ave_ASV_M2 <- No.ASVs_M2 %>%  summarize (ave_ASV = mean(Observed), SD_ASV = sd(Observed))
+
+#ASV table alle samples before rarefaction
+ASV_table_Glo_M2<- t(otu_table(ps_M2)) %>%  
+  data.frame () %>%  
+  as_tibble (rownames = "sampleID") %>% 
+  pivot_longer(!sampleID, names_to = "ASV_ID", values_to = "ASV_count") %>% 
+  left_join((tax_table(ps_M2) %>% 
+               data.frame () %>%  
+               as_tibble (rownames = "ASV_ID")), by= "ASV_ID")
+
+
+# total count of reads for all Glo before rarefaction
+total_reads_Glo_M2  <- ASV_table_Glo_M2 %>%  summarise(total =sum(ASV_count))
+total_reads_Glo_M2_persample  <- ASV_table_Glo_M2 %>% left_join (meta_M2) %>%  group_by ( sampleID) %>% summarise(totals= sum(ASV_count))
+
+
+
+```
+
+
+```{r rarefaction, message=FALSE, warning=FALSE, echo=FALSE}
+# coverage-based rarefaction --------------------------
+#Use package metagMisq for
+#ps_ALL_iter <-  phyloseq_coverage_raref(ps_ALL, iter =2) #produces 99 ps objects in list
+# runs for 99 iterations in raapoi for 4.30 with 24 cores
+# write_rds (ps_ALL_iter, "results/ps_ALL_iter99.rds")
+# ps_ALL_iter <- read_rds("data/ps_ALL_iter99.rds")
+
+## this is also too memory intensive
+# runs on Raapoi with 24 CPUs , 48 GB
+# interactive srun --pty --cpus-per-task=24 --mem=48G  --time=00:10:00 --partition=quicktest R
+
+# ALL_coverage_table_M2 <- 
+#   map(ps_ALL_iter, otu_table) %>%
+#   map (data.frame) %>%   map (t) %>%
+#   map (function (df) as_tibble (df,rownames = "sampleID" )) %>%
+#   map_dfr (bind_rows, .id = "TableNumber") %>%
+#   pivot_longer(!c(TableNumber, sampleID), names_to =  "ASV_ID", values_to = "counts") %>%
+#   group_by (sampleID, ASV_ID) %>% select (!TableNumber) %>%
+#   summarize (mean_counts = round (mean(counts))) %>%
+#   unique () %>%
+#   pivot_wider(id_cols = , names_from = "sampleID", values_from = "mean_counts") %>%
+#   data.frame()
+
+ALL_coverage_tables_M2_99 <- readRDS("data/ALL_cov_table_M2_99.rds")
+ALL_coverage_tables_M2 <- 
+  ALL_coverage_tables_M2_99 %>%  
+  t() %>%  
+  as_tibble (rownames = "sampleID") %>% 
+  mutate (sampleID = str_remove(sampleID, "X")) %>% # remove the X in sampleIDs
+  data.frame(row.names = "sampleID") 
+
+ps_ALL_rarefied <- ps_ALL  # make new ps object
+otu_table (ps_ALL_rarefied) <- otu_table(ALL_coverage_tables_M2, taxa_are_rows = F)  # exchange otu table with rarefoed one
+
+ps_M2_rarefied  <- subset_samples (ps_ALL_rarefied, AC.BC != "M1" & AC.BC != "control")
+ave_ASV_M2_rar <- sample_sums (ps_M2_rarefied) %>%  data.frame() %>% tibble () %>%  summarize (mean=mean (.))
+sum_allASV_M2_rar  <- sample_sums (ps_M2_rarefied) %>%  data.frame() %>% tibble () %>%  summarize (sum=sum (.))
+
+ps_All_Glo_rar <- subset_taxa (ps_ALL_rarefied, Phylum == "Glomeromycota")
+sample_data(ps_All_Glo_rar) <- sample_data (data.frame (meta_all, row.names = "sampleID"))
+ps_All_Glo_rar <- prune_taxa(taxa_sums(ps_All_Glo_rar)>=1, ps_All_Glo_rar)
+ps_All_Glo_rar  <- prune_samples(sample_sums(ps_All_Glo_rar)>=1, ps_All_Glo_rar)
+
+
+ps_M2_Glo_rar   <- subset_samples (ps_All_Glo_rar, AC.BC != "M1" & AC.BC != "control")
+ps_M2_Glo_rar  <- prune_samples (sample_sums (ps_M2_Glo_rar)>=1, ps_M2_Glo_rar)
+ps_M2_Glo_rar  <- prune_taxa(taxa_sums(ps_M2_Glo_rar)>=1, ps_M2_Glo_rar)
+
+total_reads_Glo_M2_rar  <- sample_sums (ps_M2_Glo_rar) %>%  data.frame() %>% tibble () %>%  summarize (total=sum (.))
+```
+
+\newpage
+
+
+## Results
+
+### Sequencing results
+
+Eight plant species of distinct interaction niche properties for AMF (see Chapter 3) were chosen to study the interplay between priority effects, plant neighbourhood effects and interaction niche properties. Each of the eight plant species was grown as focal plant in a community of the seven remaining plant species, with either the focal plant arriving 4 weeks before (BC) or after the community (AC). For each of the resulting 16 treatments, 5 replicates were obtained, resulting in the determination of the AMF community in the roots of 640 plant individuals.
+Sequencing results of the fungal communities for `r nsamples (ps_M2_allASVs)` samples were obtained with an average of `r  round (ave_input_M2$ave_reads) %>% prettyNum(big.mark = ",")` reads per sample at a total read count of `r (input_M2$input_all)%>% prettyNum(big.mark = ",")`.  `r round (ave_nochim_M2$ave_reads) %>% prettyNum(big.mark = ",")` reads remained on average per sample after filtering.
+A total number of `r ntaxa (ps_M2_allASVs)  %>% prettyNum(big.mark = ",")` ASVs resulted from the sample inference of the DADA2 pipeline with an average number of `r round(ave_ASV_M2$ave_ASV)` $\pm$ `r round(ave_ASV_M2$SD_ASV)` ASVs per sample. 
+After coverage-based rarefaction of the samples, a total of `r sum_allASV_M2_rar$sum %>% prettyNum(big.mark = ",")` reads in `r  nsamples (ps_M2_rarefied)` samples  with an average of `r round (ave_ASV_M2_rar$mean) %>% prettyNum(big.mark = ",")` reads per sample remained. The removal of ASVs not belonging to the sub-phylum Glomeromycotina left `r ntaxa (ps_M2_Glo_rar)` ASVs with a total count of `r total_reads_Glo_M2_rar$total %>% prettyNum(big.mark = ",")` reads. `r (nsamples (ps_M2_rarefied)) - (nsamples (ps_M2_Glo_rar))`  samples were removed at that stage as they did not include any sequences after filtering for Glomeromycotina. 
+
+
+
+### The net priority effects of a neighbourhood plant community differ between recipient plant species 
+
+
+```{r interaction-niche-properties}
+## remove samples not from focal plants ##
+
+# make list of wanted samples
+focalPlants  <- meta_all %>%  filter (GSPlaSpe == focal.sp) %>%  mutate (sampleID2 = sampleID) %>%  pull (sampleID2)
+
+new_sampledata  <- 
+  sample_data (ps_All_Glo_rar) %>%  data.frame() %>%  
+  as_tibble (rownames = "sampleID") %>% 
+  mutate (sampleID2 = sampleID) %>%  
+  data.frame(row.names = "sampleID") %>% 
+  sample_data()
+
+sample_data(ps_All_Glo_rar)  <- new_sampledata
+
+# phyloseq with only the M2 focal plants
+ps_focal  <- subset_samples(ps_All_Glo_rar, sampleID2  %in% focalPlants)
+
+
+# Estimate richness for focal plants' AMF ##
+adiv_richness_all  <- 
+  estimate_richness(ps_focal, measures = c("Observed", "Chao1", "Shannon")) %>% 
+  as_tibble (rownames = "sampleID") %>% 
+  mutate (sampleID = str_remove(sampleID, "X")) %>% 
+  left_join (meta_all, by = "sampleID")  %>% 
+  left_join(meta_plants, by = "focal.sp")
+
+## richness per species -average
+meannumberASVsper_species_all  <-
+  adiv_richness_all %>% 
+  group_by (roots_soil, AC.BC, focal.sp, treatment) %>% 
+  summarize (meanASV = mean (Observed))
+
+# unique ASVs####
+## unique ASVs per species
+ASV_table_Glo_all <- 
+  otu_table (ps_focal) %>%  
+  data.frame ()  %>%  
+  as_tibble (rownames = "sampleID") 
+
+## number of all replicates after rarefaction and subset for Glo - needed to calculate CU #
+replicates_samples_after_Glo_M2  <-
+  adiv_richness_all %>%  group_by (roots_soil, treatment ) %>%  tally() %>% 
+  dplyr:: rename ("repl"= "n")
+
+
+## get focal species, and unique asvs
+unique  <- 
+  ASV_table_Glo_all  %>% 
+  pivot_longer(!sampleID, names_to = "ASV_ID", values_to = "ASV_count") %>% 
+  filter (ASV_count != 0) %>%  
+  left_join(meta_all) %>%  
+  group_by (roots_soil, AC.BC, focal.sp, treatment, ASV_ID) %>%  
+  tally (name ="uniqueASV") %>% 
+  group_by (roots_soil, AC.BC, focal.sp, treatment) %>%  
+  tally (name ="uniqueASV")
+
+
+comp_units   <- meannumberASVsper_species_all  %>% 
+  left_join(unique, by = c("roots_soil", "AC.BC", "focal.sp", "treatment"))  %>% 
+  left_join (replicates_samples_after_Glo_M2) %>% 
+  mutate (CUnits = uniqueASV/(meanASV* repl)) %>%   
+  select (!repl)
+
+
+### Cores####
+
+## Does not work as described, workaround to seperate all treatments
+ps_focal  <- merge_treatments(ps_focal, c ("roots_soil", "treatment"))
+
+ps_focal_soil <- subset_samples(ps_focal, roots_soil == "soil")
+ps_focal_Soil_core  <-phylosmith::taxa_core (ps_focal_soil, treatment = c ( "treatment"), frequency =0.6)#see above
+ps_focal_Soil_core <- conglomerate_samples(ps_focal_Soil_core, treatment = "treatment", merge_on = "treatment")
+
+ps_focal_roots <- subset_samples(ps_focal, roots_soil == "roots")
+ps_focal_roots_core  <-phylosmith::taxa_core (ps_focal_roots, treatment = c ( "treatment"), frequency =0.6)#see above
+ps_focal_roots_core <- conglomerate_samples(ps_focal_roots_core, treatment = "treatment", merge_on = "treatment")
+
+
+#calculate beta diversity as percentage 
+cores_soil  <- 
+  as.data.frame (otu_table (ps_focal_Soil_core )) %>%   as_tibble(rownames = "ASV_ID") %>% 
+  gather (!ASV_ID, key=treatment, value = ASV_counts)  %>%  
+  group_by (treatment) %>%  
+  dplyr::filter (ASV_counts != "0")  %>% 
+  dplyr::tally(name="core") %>% 
+  left_join(unique %>% filter (roots_soil == "soil"), by = "treatment")  %>% 
+  mutate (perc_core = 100* core/uniqueASV) %>% 
+  mutate (perc_core = round (perc_core,1) ) %>% 
+  select (treatment, perc_core) %>% 
+  add_column (roots_soil = "soil")
+
+
+cores_roots  <- 
+  as.data.frame (otu_table (ps_focal_roots_core )) %>%   as_tibble(rownames = "ASV_ID") %>% 
+  gather (!ASV_ID, key=treatment, value = ASV_counts)  %>%  
+  group_by (treatment) %>%  
+  dplyr::filter (ASV_counts != "0")  %>% 
+  dplyr::tally(name="core") %>% 
+  left_join(unique %>%  filter (roots_soil == "roots") %>%  mutate (treatment = str_c (AC.BC, focal.sp, sep = "_")), by = "treatment")  %>% 
+  mutate (perc_core = 100* core/uniqueASV) %>% 
+  mutate (perc_core = round (perc_core,1) ) %>% 
+  select (treatment, perc_core) %>% 
+  add_column (roots_soil = "roots")
+
+cores <- cores_soil %>%  bind_rows(cores_roots)
+
+### PD####
+comm_df_Glo_M2  <- data.frame (otu_table (ps_All_Glo_rar)) # vegan expects samples as rows and ASVs species as columns
+
+#hier total randomised community data frame as null model
+stand_pd_Glo_all_M2  <- as_tibble (ses.pd(comm_df_Glo_M2, phy_tree(ps_All_Glo_rar), include.root = FALSE, null.model = "independentswap", runs=100, iterations=999), rownames="sampleID")
+
+stand_pd_Glo_all_M2  <- 
+  stand_pd_Glo_all_M2 %>%  
+  left_join (meta_all) %>% 
+  mutate (treatment = str_c (AC.BC, focal.sp, sep = "_")) %>%  
+  select (!c(notes, pot, DW_above, AC.BC, focal.sp, GSPlaSpe))
+
+## MPD ####
+dist_Glo_M2  <- cophenetic(phy_tree(ps_All_Glo_rar))
+ses.MPD_Glo  <-  as_tibble (ses.mpd (comm_df_Glo_M2, dist_Glo_M2, null.model = "independentswap" ), rownames = "sampleID")
+
+# together PD, MPD #
+PD_MPD <-  
+  stand_pd_Glo_all_M2 %>%  
+  select (sampleID, pd.obs) %>% 
+  left_join(ses.MPD_Glo, by = "sampleID") %>%  
+  left_join (meta_all) %>% 
+  mutate (treatment = str_c (AC.BC, focal.sp, sep = "_")) %>%  
+  select (!c(notes, pot, DW_above, AC.BC, focal.sp, GSPlaSpe)) %>% 
+  drop_na() %>% 
+  group_by (roots_soil, treatment) %>% 
+  mutate (mean_pd = mean (pd.obs), mean_mpd = mean (mpd.obs)) %>%  
+  select (roots_soil, treatment,   mean_pd, mean_mpd)   %>% 
+  unique ()  
+
+#Get values for all metrics in one tibble
+All_metrics_M2  <-
+  adiv_richness_all %>% 
+  group_by(roots_soil, treatment)  %>% 
+  mutate (Chao1 = mean (Chao1)) %>% 
+  mutate (Shannon = mean (Shannon)) %>%  
+  select (sampleID, Chao1, Shannon) %>% 
+  select (!sampleID) %>% 
+  unique()  %>%  
+  left_join (comp_units %>%  mutate (treatment = str_c (AC.BC, focal.sp, sep = "_")), by =c( "roots_soil", "treatment"))    %>%   #includes CU and unique and richness
+  left_join(cores, by =c( "roots_soil", "treatment")) %>% 
+  left_join (PD_MPD, by =c( "roots_soil", "treatment")) %>% 
+  dplyr::rename("Richness"= "meanASV", "CU" = "CUnits", "β(core)"  = "perc_core",
+                "PD" = "mean_pd", "MPD" = "mean_mpd" )  %>% 
+  mutate (TM = str_c (roots_soil, treatment, sep = "-")) %>% 
+  as.data.frame(row.names = NULL) %>% 
+  relocate (where (is.numeric))
+rownames(All_metrics_M2)  <- All_metrics_M2$TM
+#All_metrics  <- All_metrics[,-1]
+
+
+All_metrics_roots  <- All_metrics_M2 %>%  filter (roots_soil != "soil") 
+rownames(All_metrics_roots)  <- All_metrics_roots$treatment
+
+```
+
+```{r tTest-richness-ACBCM1 }
+### add ttest differences 
+t_test_richness_focal_sp <- 
+adiv_richness_all %>%  
+  filter (roots_soil == "roots") %>%  
+ #filter (AC.BC !=  "AC") %>% 
+  group_by (PlantSpeciesfull) %>% 
+  t_test(Observed ~ AC.BC) #%>% 
+  #filter (p < 0.05)
+
+## means and their differences 
+mean_richness_ACBCM1 <- 
+  adiv_richness_all %>%  
+    filter (roots_soil == "roots") %>%  
+    #filter (AC.BC !=  "AC") %>% 
+    group_by (PlantSpeciesfull, AC.BC) %>%  
+  summarize (mean = mean (Observed)) %>%  
+  pivot_wider(names_from = "AC.BC", values_from = mean) %>%  
+  mutate (diffACM1 = AC-M1 , diffBCM1 = BC - M1, diffACBC = AC-BC)
+```
+
+```{r PD-tTest-ACBCM1 }
+pd_ttest_ACBC  <-
+stand_pd_Glo_all_M2 %>%  
+  left_join (meta_all) %>% 
+  left_join (meta_plants, by = "focal.sp") %>% 
+  filter (roots_soil == "roots") %>%  
+  filter (focal.sp ==  GSPlaSpe) %>% 
+  group_by (PlantSpeciesfull) %>% 
+  filter (!is.na (pd.obs)) %>% 
+  t_test(pd.obs ~ AC.BC) %>%  ## p.adj nur dann verwendet, wenn die hypothese sich nicht auf die einzelnen comparisons bezieht sondern z.b. lautet: zwischen dem AC und single treatment ist ein unterschied für ALLe planzen
+  filter (p <0.05)  %>% 
+  mutate (df = round (df), statistic = round (statistic, 1), group2 = str_replace (group2, "M1", "single"), group1 = str_replace (group1, "M1", "sngle")) 
+#%>%    flextable ()
+
+
+mean_pd_ACBCM1 <- 
+  stand_pd_Glo_all_M2 %>%  
+  left_join (meta_all) %>% 
+  left_join (meta_plants, by = "focal.sp") %>% 
+  filter (roots_soil == "roots")  %>% 
+  filter (!is.na (pd.obs)) %>% 
+  group_by (PlantSpeciesfull, AC.BC) %>%  
+  summarize (mean = mean (pd.obs)) %>%  
+  pivot_wider(names_from = "AC.BC", values_from = mean) %>%  
+  mutate (diffACM1 = AC-M1 , diffBCM1 = BC - M1, diffACBC = AC-BC )
+
+```
+
+```{r MPD-tTest-ACBCM1 }
+mpd_ttest_ACBCM1 <-
+  ses.MPD_Glo %>% 
+  left_join (meta_all) %>% 
+  left_join (meta_plants, by = "focal.sp") %>% 
+  filter (roots_soil == "roots") %>%  
+  filter (focal.sp ==  GSPlaSpe) %>% 
+  filter (!is.na (mpd.obs)) %>% 
+  group_by (PlantSpeciesfull) %>% 
+  t_test(mpd.obs ~ AC.BC) %>% 
+  #filter (p <0.05) %>%  
+  mutate(df = round (df), statistic = round (statistic, 1), group1 = str_replace (group1, "M1", "single"), group2 = str_replace(group2, "M1", "single")) 
+
+mean_mpd_ACBCM1 <- 
+  ses.MPD_Glo %>%  
+  left_join (meta_all) %>% 
+  left_join (meta_plants, by = "focal.sp") %>% 
+  filter (roots_soil == "roots")  %>% 
+  filter (!is.na (mpd.obs)) %>% 
+  group_by (PlantSpeciesfull, AC.BC) %>%  
+  summarize (mean = mean (mpd.obs)) %>%  
+  pivot_wider(names_from = "AC.BC", values_from = mean) %>%  
+  mutate (diffACM1 = AC-M1 , diffBCM1 = BC - M1)
+
+
+```
+
+
+
+I found that the interaction niche properties of all focal plant species were changed by the addition of a plant community consisting of seven other species. However, the strength of this neighbourhood effect differed depending on the focal plant species, and also on the priority of arrival. Contrary to my hypothesis, these effects were mostly independent from the plant species' inherent AMF selectivity. 
+The interaction niche properties of the three forbs, but especially of the Asteraceae were strongly changed by the addition of the plant neighbours, indicating a relatively strong impact of the community relative to the inherent interaction trait of these focal plants (Fig. \@ref(fig:plot-euclidean-community)). 
+Furthermore, for the two Asteraceaen species, the neighbourhood effect seemed to be independent of the order of arrival, as indicated by the almost equal Euclidean distances for the contrast of the AC and BC treatments against the single grown treatment.
+
+With the exception of the AC treatment of *A. capillaris*, the neighbourhood influence on the grasses' interaction niche properties was overall smaller than that on the forbs'. 
+There was no clear tendency of a higher impact of one or the other priority treatments (AC or BC).
+Among the cardinal values that determined interaction niche properties the numeric ($\alpha$-diversity) and phylogenetic richnesses (Faith's phylogenetic diversity (PD)) were the greatest contributors to the changes in interaction niche properties among the species. 
+In contrast to their single grown plants, the mean numeric richness increased significantly for *A. capillaris* (t-test t(`r round (t_test_richness_focal_sp[6,]$df[[1]])`) = `r round (t_test_richness_focal_sp[6,]$statistic[[1]],1)`, *p* =  `r t_test_richness_focal_sp[6,]$p[[1]]`) and *P. lanceolata* (t-test t(`r round (t_test_richness_focal_sp[18,]$df[[1]])`) = `r round (t_test_richness_focal_sp[18,]$statistic[[1]],1)`, *p* =  `r t_test_richness_focal_sp[18,]$p[[1]]`) in the BC treatments, while for *A. millefolium*, the richness of the AMF community lowered in both the AC ((t-test t(`r round (t_test_richness_focal_sp[2,]$df[[1]])`) = `r round (t_test_richness_focal_sp[2,]$statistic[[1]],1)`, *p* =  `r t_test_richness_focal_sp[2,]$p[[1]]`)) and the BC treatment (t-test t(`r round (t_test_richness_focal_sp[3,]$df[[1]])`) = `r round (t_test_richness_focal_sp[3,]$statistic[[1]],1)`, *p* =  `r t_test_richness_focal_sp[3,]$p[[1]]`) compared to the single grown plants (Table \@ref(tab:richness-tTest-table)). 
+The phylogenetic richness (PD) of the AMF community decreased in the BC treatment of *A. millefolium* (t-test t(`r round (pd_ttest_ACBC[1,]$df[[1]])`) = `r round (pd_ttest_ACBC[1,]$statistic[[1]],1)`, *p* =  `r pd_ttest_ACBC[1,]$p[[1]]`)).
+*A. capillaris*, in contrast, showed an increased PD of its AMF community in the BC treatment (t-test t(`r round (pd_ttest_ACBC[2,]$df[[1]])`) = `r round (pd_ttest_ACBC[2,]$statistic[[1]],1)`, *p* =  `r pd_ttest_ACBC[2,]$p[[1]]`), while *B. willdenowii* (t-test t(`r round (pd_ttest_ACBC[4,]$df[[1]])`) = `r round (pd_ttest_ACBC[4,]$statistic[[1]],1)`, *p* =  `r pd_ttest_ACBC[4,]$p[[1]]`) was significantly phylogeneticly enriched when planted after the plant community (AC) (Table \@ref(tab:PD-tTest-table)).
+
+
+```{r euclidean}
+# ### Funktion to calculate euclidean distance between tow column a and b
+euclidean <- function(a, b) sqrt(sum((a - b)^2))
+
+# Euclideaen distancs for the focal plants, distance between interaction niche properties ####
+
+# AC and BC treatments vs single plant species ### 
+AB_M1_distances <- 
+  All_metrics_roots %>%  
+  mutate_at(c(1:8),scale)  %>%    # z score standardisation
+  group_split (focal.sp) %>%  # split into each plant species
+  map (~ dist (., method = "euclidean"),.id= focal.sp) %>%  ## calculate distances
+  map (  ~melt (as.matrix(.), varnames = c("row", "col"))) %>%   # put together into tibble again
+  map (~filter (., col =="1" & row != "1")) %>%   ## remove unimportant distances
+  map (~add_column(., TM = c("AC", "BC"))) %>% 
+  map_dfr (~select (.,value, TM)) %>%  
+  add_column (focal.sp= c ("G1", "G1", "G2", "G2",
+                           "G3", "G3", "G4", "G4", 
+                           "S1", "S1", "S2", "S2", 
+                           "S3", "S3", "S4", "S4")
+              ) %>% 
+  mutate (treatment =str_c ( TM, focal.sp, sep = "-")) %>%  
+  left_join (meta_plants) %>% 
+  mutate (x= str_c (TM, PlantSpeciesfull, sep =" ")) %>% 
+  arrange (M1_M2_order) %>% 
+  add_column (dist_order = c(1:16))
+
+```
+
+```{r plot-euclidean-community, fig.cap = "The Euclidean distances between interaction niche properties for eight plant species and priority of arrival treatments. Euclidean distance is a measure of the relative strength of the influence from the plant community on the interaction niche properties of each focal plant. Interaction niche properties for each treatment were z-score standardised and the Euclidean distances between the interaction niche properties of the focal plant in a plant community (either AC or BC) and the same plant grown alone calculated. Large values imply stronger influence of the neighbouring plant community on the AMF community of the focal plant. Differences between the AC and BC treatment for each plant indicate relative strength of a late arriving vs. already established plant community on a focal plant." }
+## plot of distances BC vs M1 and AC vs M1
+# describes the influence of the plant communty on the interaction niche properties 
+
+AB_M1_distances %>% 
+  ggplot (aes (x= TM   , y = value, 
+               color = paste (TM, PlantFamily))) +
+  geom_segment(aes (x=TM,  xend=TM, y=0, yend= value),size = 3, 
+               arrow = arrow (length = unit(0.07,"npc")), lineend = "butt", linejoin = "mitre") +
+  coord_flip () + 
+  theme_light() +
+  facet_wrap (~reorder (PlantSpeciesfull, M1_M2_order), nrow=8, strip.position = "right") +
+  theme (strip.text.y =  element_text (face = "italic", 
+                                       color = "black", angle =0), strip.background = element_rect(fill= "white")) +
+  scale_color_manual(values=c("AC Asteraceae" = "#edc948" , "BC Asteraceae" = "#f6e4a3" , 
+                              "AC Plantaginaceae" ="#4e79a7", "BC Plantaginaceae" = "#94aeca",
+                              "AC Poaceae" ="#7F9A65" , "BC Poaceae" = "#b2c2a2"))  +
+  xlab (element_blank()) +
+  ylab ("Euclidean distance" ) +
+  labs (color = "Treatment") 
+```
+
+Separating the effect of the plant neighbourhood on the AMF community properties of the focal plant was achieved by determining the Euclidean distances between the interaction niche properties of the AC and BC treatments (Fig. \@ref(fig:plot-net-priority-euclidean)). This Euclidean distance is a proxy for the net priority effect of the community on the interaction niche properties of the focal plant species. Small values indicate that the order of arrival has no strong impact on the interaction niche properties and vice versa. The plants differed strongly in their net priority effect but there was no clear separation of the effect by plant family or numeric generalism.  *A. capillaris* and *B. willdenowii* received the greatest net priority effects, i.e., their interaction niche properties differed the strongest between the AC and BC treatments. In contrast, the interaction niche properties did not notably differ for *C. intybus*, indicating that the large change that the plant community induced in the interaction properties of *C. intybus* was independent of its order of arrival. The other plants showed small to medium net priority effects, indicating a slight effect of arrival order in a plant community on their AMF community properties.
+Examining which interaction niche properties were the strongest determinants of the net priority effect revealed that the large difference between the AC and BC treatments for *B. willdenowii* was driven by increases in both the phylogenetic diversity (PD)  and phylogenetic distance (MPD) of the AMF community from the AC treatments compared against those of the BC treatments. This indicates that *B. willdenowii* became more of a phylogenetic generalist when planted after an established plant community. 
+Although not identified as significant by a two-sample t-test, the large difference in the richness values between the treatments of *A. capillaris* seemed to be responsible for the plant's large net priority effects. Both the AC and BC mean values for the AMF richness were, with S~Ob~ = 34 and S~Ob~ = 50 AMF ASVs respectively, larger than that of the single grown species (S~Ob~ = 27), with the BC treatment of *A. capillaris* showing the largest difference by far between any of the treatments across all plant species.
+
+```{r plot-net-priority-euclidean, fig.cap = "Net priority effect for each plant species. The Euclidean distances between the z-score standardised interaction niche properties of the BC and AC treatment were calculated for each focal plant species. Small values imply that the order of arrival has no strong impact on the interaction niche properties." }
+## Distance Ac to BC ###
+AC_BC_dist <- 
+  All_metrics_roots %>%  filter (AC.BC != "M1") %>% 
+  mutate_at(c(1:8),scale)  %>%  
+  group_split (focal.sp) %>%
+  map (~ dist (., method = "euclidean"),.id= focal.sp) %>% 
+  map (  ~melt (as.matrix(.), varnames = c("row", "col"))) %>% 
+  map (~filter (., col =="1" & row != "1")) %>% 
+  map_dfr (~select (.,value)) %>%  
+  add_column (focal.sp= c ("G1",  "G2",
+                           "G3", "G4", 
+                           "S1",  "S2", 
+                           "S3",  "S4")) %>% 
+  arrange (value) %>% 
+  add_column (position = c (0.1,0.5, 0.4,0.3,0.2, 0.1, 0.3, 0.2)) %>% 
+  left_join (meta_plants) %>% 
+  as_tibble ()
+
+AC_BC_dist %>%  ggplot (aes (x= value, y = 1, label = PlantSpeciesfull, xmin = -0.1, xmax = 8)) + 
+    geom_point (size =2, color = "red") + 
+ geom_text_repel(
+    force_pull   = 0, # do not pull toward data points
+    nudge_y      = 0.05,
+    direction    = "x",
+    angle        = 90,
+    fontface = "italic",
+    hjust        = 0,
+    segment.size = 0.2,
+    max.iter = 1e4, max.time = 1
+ ) + 
+  theme_classic () +
+  xlim(-0.01, 8) +
+  ylim(1, 0.8) +
+  theme(axis.line.y=element_blank(), 
+        axis.text.y=element_blank(),     
+        #axis.title.x=element_blank(),
+         axis.title.y=element_blank(),
+         axis.ticks.y=element_blank(),
+         #axis.text.x =element_blank(),
+         #axis.ticks.x =element_blank(),
+         #axis.line.x =element_blank(),
+         legend.position = "bottom")  +
+    scale_x_continuous(breaks=seq(0,8,1)) +
+   xlab (label = "Euclidean distance between AC and BC interaction niche properties")
+
+
+
+
+
+
+# AC_BC_dist %>%  ggplot (aes (x= value, y = 0, xmin = -0.1, xmax = 8)) + 
+#   geom_hline (yintercept =0, color = "black", size = 0.3) + 
+#   geom_point (size =2) + 
+#   theme_classic() +
+#   #geom_segment (aes (x=value, y = position, xend = value, yend =0)) +
+#   theme(axis.line.y=element_blank(), 
+#         axis.text.y=element_blank(),     
+#         #axis.title.x=element_blank(),
+#          axis.title.y=element_blank(),
+#          axis.ticks.y=element_blank(),
+#          #axis.text.x =element_blank(),
+#          #axis.ticks.x =element_blank(),
+#          #axis.line.x =element_blank(),
+#          legend.position = "bottom") +
+#   geom_text_repel (aes (x=value,  label = PlantSpeciesfull, fontface = "italic"), min.segment.length = 0, seed = 42, force_pull = 0)+
+# #,           nudge_x = 0.02, nudge_y = 0.1, check_overlap = F) +
+#  scale_y_continuous( expand = c(0,0), limits = c(-0.01,2) )+
+#   scale_x_continuous(breaks=seq(0,8,1)) +
+#   xlab (label = "Euclidean distance between AC and BC interaction niche properties")
+```
+
+### Changes in the absolute abundances of the AMF in each plant species 
+
+Differential abundance analysis revealed that both order of arrival and plant identity of the focal plant mattered for their AMF community composition (Fig \@ref(fig:plot-DAA-heatmap)). Comparing the differences in log~2~-fold change between the two treatments, there was a tendency to smaller absolute values in log~2~-fold change in the BC treatment than in the AC treatment for *P. lanceolata*, *P. cita*, *S. arundinaceus* and *B. willdenowii*. This indicates that the earlier arrival of these focal plant species led to only small changes in their AMF community compared with the AMF community when grown alone. The late arrival of these plant species resulted in stronger changes in the AMF abundances. Especially notable were those changes in *P. cita*, which had strong increases in a taxon group of related Acaulosporaceae while other ASVs of that AMF family decreased in their absolute abundances. 
+For *A. capillaris* and *H. lanatus*, the order of arrival induced opposing trends compared to the aforementioned focal plant species: The arrival of *A. capillaris* and *H. lanatus* before the community led to some strong abundance changes for a group of tightly related Acaulosporaceae, with both increases and decreases in abundance.
+The Asteraceae were a third group that showed similar changes in the AMF abundances across their members, *A. millefolium* and *C. intybus*; neither differed between their AC and BC treatment results. Between their growth in a plant community  (BC or AC) and grown alone, these two Asteraceae showed significant decrease in the absolute abundance of a large portion of their AMF. This indicates that for *A. millefolium* and *C. intybus*, the order of arrival had no distinguishable effect on their root AMF community, whereas the presence of other plants per se was a strong influence on their AMF community. 
+
+
+The direct comparison of the BC vs. AC treatments by DAA (Fig. \@ref(fig:plot-DAA-heatmap), right panel) revealed the net priority effect on the AMF abundances per focal plant species. As described above, the effect of order of arrival was negligible for both *A. millefolium* and *C. intybus*, while *P. lanceolata* showed a mixed picture of enrichment and loss in AMF abundances, depending on the AMF ASVs, with no clear tendency in regards to the plant's priority. The net priority effect for *A. capillaris* and *H. lanatus* is predominantly characterised by an increase in AMF abundance for an early established focal plant species vs. its arrival after an established plant community. In contrast, *P. cita* and *B. willdenowii* showed mixed results with a tendency to have an increased AMF abundance when arriving after a community in comparison to its early establishment.
+
+
+
+
+```{r plot-DAA-heatmap, fig.cap = "Changes of the absolute abundances of AMF ASVs by plant species and treatment. The three plot panels show the results from the differential abundance analysis (DAA) between the plants grown in a plant community vs. grown alone (left panel: AC vs. single plant, middle panel: BC vs. single plant), and from the DAA between the BC vs. the AC treatment (right panel: BC vs. AC). In the AC treatment, the focal plant had been added after the plant community was established, whereas the focal plant was established first in the BC treatment, and the plant community added later. Each square represents the change in the absolute abundance of one ASVs, with the color indicating the log~2~-fold change (logFC). The AMF taxa are organised by the phylogenetic tree of the AMF families (left). G. = Glomeraceae, D. = Diversisporaceae, Gigas. = Gigasporaceae, A. = Archaeosporaceae, Cl. = Claroideoglomeraceae. AC = focal plant arrived after plant community, BC = focal plant arrived before plant community", fig.height= 8, fig.width=13}
+
+
+### M2 versus M1  -- only the focal plants  are compared here  
+
+### Add a new meta column to the data
+# combination of PlaSpe and root/soil, e.g. AchMil-soil, AchMil-roots
+# for use as grouping factor in edgeR!
+ps_edgeR_all <- ps_ALL
+
+ps_edgeR_all <- ps_edgeR_all %>%  subset_samples ( GSPlaSpe == focal.sp)
+
+## Remove the soil samples
+ps_edgeR_all <- subset_samples(ps_edgeR_all, roots_soil != "soil")
+
+sample_data (ps_edgeR_all) <- (sample_data (data.frame (meta_all, row.names = "sampleID")))
+
+taxa_edgeR <- tax_table (ps_edgeR_all)
+#Object for edgeR ##
+# rows OTUs, columns = samples
+# get the count table as  df
+df <- otu_table(ps_edgeR_all) %>%  
+  data.frame ()
+
+
+#Get taxon table for the ASVs - needed as meta table for the DAA results
+taxa_edgeR <- 
+  tax_table (ps_edgeR_all) %>% 
+  data.frame () %>%  
+  mutate(GenusLabel = ifelse(!is.na(Genus), paste(Genus), 
+                             ifelse(!is.na(Family), paste('Unid. ', Family, sep = ""), 
+                                    ifelse(!is.na(Order), paste('Unid. ', Order, sep = ""),
+                                           ifelse(!is.na(Class), paste('Unid. ', Class, sep = ""), paste("Unid. ", Phylum, sep = "")))))) %>% 
+  as_tibble (rownames = "ASV_ID" ) %>%  
+  select (ASV_ID, GenusLabel,Phylum, Class, Family, Genus)
+# DAA#####
+## Grouping : focal plants in AC BC and M1 , called treatments
+group = factor (sample_data (ps_edgeR_all)$treatment)
+
+## prepare edgeR object y
+y <- DGEList(counts = df, group = group)
+DAA_dim_before_filter <- dim(y)
+# Filtering ####
+#filter small OTUs- that removes about 2000 OTUs
+keep <- filterByExpr(y)
+# filter the dataset for the ASVs to keep
+y <- y[keep, , keep.lib.sizes=FALSE]
+DAA_dim_after_filter <-  dim (y)
+
+#Normalisation####
+#The calcNormFactors function normalizes the library sizes by finding a set of scaling factors
+#for the library sizes that minimizes the log-fold changes between the samples for most genes.
+y<- calcNormFactors(y)
+#y$samples
+#A normalization factor below one indicates that a small number of high count genes
+#are monopolizing the sequencing, causing the counts for other genes to be lower than would
+#be usual given the library size.
+
+design <- model.matrix (~ 0 + group , data = y$samples)
+
+#Dispersions - GLM####
+#For general experiments (with multiple factors), edgeR uses the Cox-Reid profile-adjusted
+#likelihood (CR) method in estimating dispersions [25].
+y <- estimateDisp(y, design)
+
+#add sample information
+y$samples$AC.BC <- factor (sample_data (ps_edgeR_all)$AC.BC)
+y$samples$focal.sp <- factor (sample_data (ps_edgeR_all)$focal.sp)
+##y$samples$PlantFamily <- factor (sample_data (ps_edgeR_all)$PlantFamily)
+
+
+
+# DESIGN: Decide on grouping ####
+# see Law 2020, A guide to creating design matrices ...
+## Model design 
+
+colnames(design) <- levels(y$samples$group)
+#check the names of the columns with 
+# colnames(design)
+# to get the needed comparisons (either by writing contrasts or by direct use of the coefficient's results)
+
+# testing for differentially abundant (DA) OTUs
+#While the likelihood ratio test is a more obvious choice for inferences with GLMs, the QL
+#F-test is preferred as it reflects the uncertainty in estimating the dispersion for each gene. It
+#provides more robust and reliable error rate control when the number of replicates is small.
+#The QL dispersion estimation and hypothesis testing can be done by using the functions
+#glmQLFit() and glmQLFTest().
+
+
+#GLM ####
+fit <- glmQLFit(y, design)
+
+
+#Contrasts to compare ####
+contrasts <- makeContrasts(
+  AchMilB_M = BC_S1 - M1_S1, AgrCapB_M = BC_G2 - M1_G2, 
+  BroWilB_M = BC_G3 - M1_G3, CicIntB_M = BC_S2 - M1_S2, 
+  HolLanB_M = BC_G1 - M1_G1, PlaLanB_M = BC_G4 - M1_G4, 
+  PoaCitB_M = BC_S3 - M1_S3, SchAruB_M = BC_S4 - M1_S4, 
+  AchMilA_M = AC_S1 - M1_S1, AgrCapA_M = AC_G2 - M1_G2, 
+  BroWilA_M = AC_G3 - M1_G3, CicIntA_M = AC_S2 - M1_S2, 
+  HolLanA_M = AC_G1 - M1_G1, PlaLanA_M = AC_G4 - M1_G4, 
+  PoaCitA_M = AC_S3 - M1_S3, SchAruA_M = AC_S4 - M1_S4, 
+  AchMilA_B = BC_S1 - AC_S1, AgrCapA_B = BC_G2 - AC_G2, 
+  BroWilA_B = BC_G3 - AC_G3, CicIntA_B = BC_S2 - AC_S2, 
+  HolLanA_B = BC_G1 - AC_G1, PlaLanA_B = BC_G4 - AC_G4, 
+  PoaCitA_B = BC_S3 - AC_S3, SchAruA_B = BC_S4 - AC_S4, 
+  levels=colnames(design))
+#contrasts
+
+# PlaSpe results AC vs M1####
+AchMil_ACM <- glmQLFTest(fit, contrast = contrasts [,"AchMilA_M"]) 
+# Ach Mil data roots ##
+DAA_AchMil_ACM <-
+  AchMil_ACM$table %>%  
+  as_tibble (rownames = "ASV_ID") %>% 
+  left_join (taxa_edgeR) %>% 
+  filter (Phylum == "Glomeromycota" ) %>% 
+  add_column (PlaSpe = "AchMil") %>% ### change here 
+  mutate (Sign = case_when(PValue<=0.05 ~ "sign.", PValue > 0.05 ~ "ns")) %>% 
+  add_column (AC.BC = "AC")
+
+# Agr Cap roots ##
+# i.e. compare treatments
+AgrCap_ACM <- glmQLFTest(fit, contrast = contrasts [,"AgrCapA_M"]) 
+
+# Ach Mil data roots
+DAA_AgrCap_ACM <-
+  AgrCap_ACM$table %>%  
+  as_tibble (rownames = "ASV_ID") %>% 
+  left_join (taxa_edgeR) %>% 
+  filter (Phylum == "Glomeromycota" ) %>% 
+  add_column (PlaSpe = "AgrCap") %>% ### change here 
+  mutate (Sign = case_when(PValue<=0.05 ~ "sign.", PValue > 0.05 ~ "ns")) %>% 
+  add_column (AC.BC = "AC")
+
+## BroWIl ACM
+BroWil_ACM <- glmQLFTest(fit, contrast = contrasts [,"BroWilA_M"]) 
+
+DAA_BroWil_ACM <-
+  BroWil_ACM$table %>%  
+  as_tibble (rownames = "ASV_ID") %>% 
+  left_join (taxa_edgeR) %>% 
+  filter (Phylum == "Glomeromycota" ) %>% 
+  add_column (PlaSpe = "BroWil") %>% ### change here 
+  mutate (Sign = case_when(PValue<=0.05 ~ "sign.", PValue > 0.05 ~ "ns"))%>% 
+  add_column (AC.BC = "AC")
+
+# CicInt data ACM
+
+
+CicInt_ACM <- glmQLFTest(fit, contrast = contrasts [,"CicIntA_M"]) 
+
+DAA_CicInt_ACM <-
+  CicInt_ACM$table %>%  
+  as_tibble (rownames = "ASV_ID") %>% 
+  left_join (taxa_edgeR) %>% 
+  filter (Phylum == "Glomeromycota" ) %>% 
+  add_column (PlaSpe = "CicInt") %>% ### change here 
+  mutate (Sign = case_when(PValue<=0.05 ~ "sign.", PValue > 0.05 ~ "ns")) %>% 
+  add_column (AC.BC = "AC")
+
+# HolLan data ACM
+
+
+HolLan_ACM <- glmQLFTest(fit, contrast = contrasts [,"HolLanA_M"]) 
+
+DAA_HolLan_ACM <-
+  HolLan_ACM$table %>%  
+  as_tibble (rownames = "ASV_ID") %>% 
+  left_join (taxa_edgeR) %>% 
+  filter (Phylum == "Glomeromycota" ) %>% 
+  add_column (PlaSpe = "HolLan") %>% ### change here 
+  mutate (Sign = case_when(PValue<=0.05 ~ "sign.", PValue > 0.05 ~ "ns")) %>% 
+  add_column (AC.BC = "AC")
+
+# PlaLan data ACM
+
+PlaLan_ACM <- glmQLFTest(fit, contrast = contrasts [,"PlaLanA_M"]) 
+
+DAA_PlaLan_ACM <-
+  PlaLan_ACM$table %>%  
+  as_tibble (rownames = "ASV_ID") %>% 
+  left_join (taxa_edgeR) %>% 
+  filter (Phylum == "Glomeromycota" ) %>% 
+  add_column (PlaSpe = "PlaLan") %>% ### change here 
+  mutate (Sign = case_when(PValue<=0.05 ~ "sign.", PValue > 0.05 ~ "ns")) %>% 
+  add_column (AC.BC = "AC")
+
+# PoaCit data ACM
+
+
+PoaCit_ACM <- glmQLFTest(fit, contrast = contrasts [,"PoaCitA_M"]) 
+
+DAA_PoaCit_ACM <-
+  PoaCit_ACM$table %>%  
+  as_tibble (rownames = "ASV_ID") %>% 
+  left_join (taxa_edgeR) %>% 
+  filter (Phylum == "Glomeromycota" ) %>% 
+  add_column (PlaSpe = "PoaCit") %>% ### change here 
+  mutate (Sign = case_when(PValue<=0.05 ~ "sign.", PValue > 0.05 ~ "ns")) %>% 
+  add_column (AC.BC = "AC")
+
+
+# SchAru data ACM
+
+SchAru_ACM <- glmQLFTest(fit, contrast = contrasts [,"SchAruA_M"]) 
+
+DAA_SchAru_ACM <-
+  SchAru_ACM$table %>%  
+  as_tibble (rownames = "ASV_ID") %>% 
+  left_join (taxa_edgeR) %>% 
+  filter (Phylum == "Glomeromycota" ) %>% 
+  add_column (PlaSpe = "SchAru") %>% ### change here 
+  mutate (Sign = case_when(PValue<=0.05 ~ "sign.", PValue > 0.05 ~ "ns")) %>% 
+  add_column (AC.BC = "AC")
+
+
+
+#GLM F-test #####
+#compare the coefficients of the glm 
+# i.e. compare treatments
+# PlaSpe results BC vs M1####
+AchMil_BCM <- glmQLFTest(fit, contrast = contrasts [,"AchMilB_M"]) 
+# Ach Mil data roots ##
+DAA_AchMil_BCM <-
+  AchMil_BCM$table %>%  
+  as_tibble (rownames = "ASV_ID") %>% 
+  left_join (taxa_edgeR) %>% 
+  filter (Phylum == "Glomeromycota" ) %>% 
+  add_column (PlaSpe = "AchMil") %>% ### change here 
+  mutate (Sign = case_when(PValue<=0.05 ~ "sign.", PValue > 0.05 ~ "ns")) %>% 
+  add_column (AC.BC = "BC")
+
+# Agr Cap roots ##
+# i.e. compare treatments
+AgrCap_BCM <- glmQLFTest(fit, contrast = contrasts [,"AgrCapB_M"]) 
+
+# Ach Mil data roots
+DAA_AgrCap_BCM <-
+  AgrCap_BCM$table %>%  
+  as_tibble (rownames = "ASV_ID") %>% 
+  left_join (taxa_edgeR) %>% 
+  filter (Phylum == "Glomeromycota" ) %>% 
+  add_column (PlaSpe = "AgrCap") %>% ### change here 
+  mutate (Sign = case_when(PValue<=0.05 ~ "sign.", PValue > 0.05 ~ "ns"))  %>% 
+  add_column (AC.BC = "BC")
+
+## BroWIl BCM
+BroWil_BCM <- glmQLFTest(fit, contrast = contrasts [,"BroWilB_M"]) 
+
+DAA_BroWil_BCM <-
+  BroWil_BCM$table %>%  
+  as_tibble (rownames = "ASV_ID") %>% 
+  left_join (taxa_edgeR) %>% 
+  filter (Phylum == "Glomeromycota" ) %>% 
+  add_column (PlaSpe = "BroWil") %>% ### change here 
+  mutate (Sign = case_when(PValue<=0.05 ~ "sign.", PValue > 0.05 ~ "ns")) %>% 
+  add_column (AC.BC = "BC")
+
+# CicInt data BCM
+
+
+CicInt_BCM <- glmQLFTest(fit, contrast = contrasts [,"CicIntB_M"]) 
+
+DAA_CicInt_BCM <-
+  CicInt_BCM$table %>%  
+  as_tibble (rownames = "ASV_ID") %>% 
+  left_join (taxa_edgeR) %>% 
+  filter (Phylum == "Glomeromycota" ) %>% 
+  add_column (PlaSpe = "CicInt") %>% ### change here 
+  mutate (Sign = case_when(PValue<=0.05 ~ "sign.", PValue > 0.05 ~ "ns"))  %>% 
+  add_column (AC.BC = "BC")
+
+# HolLan data BCM
+
+
+HolLan_BCM <- glmQLFTest(fit, contrast = contrasts [,"HolLanB_M"]) 
+
+DAA_HolLan_BCM <-
+  HolLan_BCM$table %>%  
+  as_tibble (rownames = "ASV_ID") %>% 
+  left_join (taxa_edgeR) %>% 
+  filter (Phylum == "Glomeromycota" ) %>% 
+  add_column (PlaSpe = "HolLan") %>% ### change here 
+  mutate (Sign = case_when(PValue<=0.05 ~ "sign.", PValue > 0.05 ~ "ns"))  %>% 
+  add_column (AC.BC = "BC")
+
+# PlaLan data BCM
+
+PlaLan_BCM <- glmQLFTest(fit, contrast = contrasts [,"PlaLanB_M"]) 
+
+DAA_PlaLan_BCM <-
+  PlaLan_BCM$table %>%  
+  as_tibble (rownames = "ASV_ID") %>% 
+  left_join (taxa_edgeR) %>% 
+  filter (Phylum == "Glomeromycota" ) %>% 
+  add_column (PlaSpe = "PlaLan") %>% ### change here 
+  mutate (Sign = case_when(PValue<=0.05 ~ "sign.", PValue > 0.05 ~ "ns"))  %>% 
+  add_column (AC.BC = "BC")
+
+# PoaCit data BCM
+
+
+PoaCit_BCM <- glmQLFTest(fit, contrast = contrasts [,"PoaCitB_M"]) 
+
+DAA_PoaCit_BCM <-
+  PoaCit_BCM$table %>%  
+  as_tibble (rownames = "ASV_ID") %>% 
+  left_join (taxa_edgeR) %>% 
+  filter (Phylum == "Glomeromycota" ) %>% 
+  add_column (PlaSpe = "PoaCit") %>% ### change here 
+  mutate (Sign = case_when(PValue<=0.05 ~ "sign.", PValue > 0.05 ~ "ns"))  %>% 
+  add_column (AC.BC = "BC")
+
+
+# SchAru data BCM
+
+SchAru_BCM <- glmQLFTest(fit, contrast = contrasts [,"SchAruB_M"]) 
+
+DAA_SchAru_BCM <-
+  SchAru_BCM$table %>%  
+  as_tibble (rownames = "ASV_ID") %>% 
+  left_join (taxa_edgeR) %>% 
+  filter (Phylum == "Glomeromycota" ) %>% 
+  add_column (PlaSpe = "SchAru") %>% ### change here 
+  mutate (Sign = case_when(PValue<=0.05 ~ "sign.", PValue > 0.05 ~ "ns"))  %>% 
+  add_column (AC.BC = "BC")
+
+
+
+# PlaSpe results Bc vs AC####
+AchMil_A_B <- glmQLFTest(fit, contrast = contrasts [,"AchMilA_B"]) 
+# Ach Mil data roots ##
+DAA_AchMil_A_B <-
+  AchMil_A_B$table %>%  
+  as_tibble (rownames = "ASV_ID") %>% 
+  left_join (taxa_edgeR) %>% 
+  filter (Phylum == "Glomeromycota" ) %>% 
+  add_column (PlaSpe = "AchMil") %>% ### change here 
+  mutate (Sign = case_when(PValue<=0.05 ~ "sign.", PValue > 0.05 ~ "ns")) %>% 
+  add_column (AC.BC = "BC vs. AC")
+
+# Agr Cap roots ##
+# i.e. compare treatments
+AgrCap_A_B <- glmQLFTest(fit, contrast = contrasts [,"AgrCapA_B"]) 
+
+# Ach Mil data roots
+DAA_AgrCap_A_B <-
+  AgrCap_A_B$table %>%  
+  as_tibble (rownames = "ASV_ID") %>% 
+  left_join (taxa_edgeR) %>% 
+  filter (Phylum == "Glomeromycota" ) %>% 
+  add_column (PlaSpe = "AgrCap") %>% ### change here 
+  mutate (Sign = case_when(PValue<=0.05 ~ "sign.", PValue > 0.05 ~ "ns"))  %>% 
+  add_column (AC.BC = "BC vs. AC")
+
+## BroWIl BCM
+BroWil_A_B <- glmQLFTest(fit, contrast = contrasts [,"BroWilA_B"]) 
+
+DAA_BroWil_A_B <-
+  BroWil_A_B$table %>%  
+  as_tibble (rownames = "ASV_ID") %>% 
+  left_join (taxa_edgeR) %>% 
+  filter (Phylum == "Glomeromycota" ) %>% 
+  add_column (PlaSpe = "BroWil") %>% ### change here 
+  mutate (Sign = case_when(PValue<=0.05 ~ "sign.", PValue > 0.05 ~ "ns")) %>% 
+  add_column (AC.BC = "BC vs. AC")
+
+# CicInt data BCM
+
+
+CicInt_A_B <- glmQLFTest(fit, contrast = contrasts [,"CicIntA_B"]) 
+
+DAA_CicInt_A_B <-
+  CicInt_A_B$table %>%  
+  as_tibble (rownames = "ASV_ID") %>% 
+  left_join (taxa_edgeR) %>% 
+  filter (Phylum == "Glomeromycota" ) %>% 
+  add_column (PlaSpe = "CicInt") %>% ### change here 
+  mutate (Sign = case_when(PValue<=0.05 ~ "sign.", PValue > 0.05 ~ "ns"))  %>% 
+  add_column (AC.BC = "BC vs. AC")
+
+# HolLan data BCM
+
+
+HolLan_A_B <- glmQLFTest(fit, contrast = contrasts [,"HolLanA_B"]) 
+
+DAA_HolLan_A_B <-
+  HolLan_A_B$table %>%  
+  as_tibble (rownames = "ASV_ID") %>% 
+  left_join (taxa_edgeR) %>% 
+  filter (Phylum == "Glomeromycota" ) %>% 
+  add_column (PlaSpe = "HolLan") %>% ### change here 
+  mutate (Sign = case_when(PValue<=0.05 ~ "sign.", PValue > 0.05 ~ "ns"))  %>% 
+  add_column (AC.BC = "BC vs. AC")
+
+# PlaLan data BCM
+
+PlaLan_A_B <- glmQLFTest(fit, contrast = contrasts [,"PlaLanA_B"]) 
+
+DAA_PlaLan_A_B <-
+  PlaLan_A_B$table %>%  
+  as_tibble (rownames = "ASV_ID") %>% 
+  left_join (taxa_edgeR) %>% 
+  filter (Phylum == "Glomeromycota" ) %>% 
+  add_column (PlaSpe = "PlaLan") %>% ### change here 
+  mutate (Sign = case_when(PValue<=0.05 ~ "sign.", PValue > 0.05 ~ "ns"))  %>% 
+  add_column (AC.BC = "BC vs. AC")
+
+# PoaCit data BCM
+
+
+PoaCit_A_B <- glmQLFTest(fit, contrast = contrasts [,"PoaCitA_B"]) 
+
+DAA_PoaCit_A_B <-
+  PoaCit_A_B$table %>%  
+  as_tibble (rownames = "ASV_ID") %>% 
+  left_join (taxa_edgeR) %>% 
+  filter (Phylum == "Glomeromycota" ) %>% 
+  add_column (PlaSpe = "PoaCit") %>% ### change here 
+  mutate (Sign = case_when(PValue<=0.05 ~ "sign.", PValue > 0.05 ~ "ns"))  %>% 
+  add_column (AC.BC = "BC vs. AC")
+
+
+# SchAru data BCM
+
+SchAru_A_B <- glmQLFTest(fit, contrast = contrasts [,"SchAruA_B"]) 
+
+DAA_SchAru_A_B <-
+  SchAru_A_B$table %>%  
+  as_tibble (rownames = "ASV_ID") %>% 
+  left_join (taxa_edgeR) %>% 
+  filter (Phylum == "Glomeromycota" ) %>% 
+  add_column (PlaSpe = "SchAru") %>% ### change here 
+  mutate (Sign = case_when(PValue<=0.05 ~ "sign.", PValue > 0.05 ~ "ns"))  %>% 
+  add_column (AC.BC = "BC vs. AC")
+
+## ALL DAA data together #
+
+DAA_HM <- bind_rows(DAA_AchMil_BCM, DAA_AgrCap_BCM, DAA_BroWil_BCM, DAA_CicInt_BCM, 
+  DAA_HolLan_BCM, DAA_PlaLan_BCM, DAA_PoaCit_BCM,  DAA_SchAru_BCM, 
+  DAA_AchMil_ACM, DAA_AgrCap_ACM, DAA_BroWil_ACM, DAA_CicInt_ACM, 
+  DAA_HolLan_ACM, DAA_PlaLan_ACM, DAA_PoaCit_ACM,  DAA_SchAru_ACM, 
+  DAA_AchMil_A_B, DAA_AgrCap_A_B, DAA_BroWil_A_B, DAA_CicInt_A_B, 
+  DAA_HolLan_A_B, DAA_PlaLan_A_B, DAA_PoaCit_A_B,  DAA_SchAru_A_B) 
+
+
+
+
+# get the tree data####
+## get a ps with only the ASVs from the heatmap
+ps_heatmap <- prune_taxa (taxa_names (ps_edgeR_all) %in% (DAA_HM %>% pull (ASV_ID)), ps_edgeR_all)
+
+# use that ps to make a tree #
+MyTree_HM <-    ps_heatmap %>% phy_tree
+
+# Save names of taxa in tree
+##TreeTax_HM <-  taxa_names(ps_heatmap)
+
+# create new taxonomy labels
+df.tax_HM <-  ps_heatmap %>% tax_table %>% as.data.frame
+df.tax_HM$ASV_ID   <-  df.tax_HM %>% row.names # add column with the ASV iD 
+
+df.tax_HM <-  df.tax_HM  %>% mutate( TaxLabel = paste(Family, Genus, sep = "_")) %>%
+  select(ASV_ID, TaxLabel, Phylum, Class, Order, Family, Genus)
+
+# Change the NA in the taxon table to the nearest identified taxon
+df.tax_HM = df.tax_HM %>%
+  mutate(GenusLabel = ifelse(!is.na(Genus), paste(Genus), 
+                             ifelse(!is.na(Family), paste('Unid. ', Family, sep = ""), 
+                                    ifelse(!is.na(Order), paste('Unid. ', Order, sep = ""),
+                                           ifelse(!is.na(Class), paste('Unid. ', Class, sep = ""), paste("Unid. ", Phylum, sep = "")))))) 
+
+# get a tibble of the whole taxa table incl new GenusLabel
+taxa_names_HM <- df.tax_HM %>% as_tibble ()
+
+
+# Tree plot ####
+# test_tree <- rotateConstr(MyTree, constraint = c("ASV_4525", "ASV_4763" , "ASV_1764","ASV_386" ,
+#                                                  "ASV_270" ,"ASV_696", "ASV_771",   "ASV_4745", 
+#                                                  "ASV_2864","ASV_1084","ASV_1758", "ASV_892" ,
+#                                                  "ASV_988" , "ASV_252" , "ASV_357"  , "ASV_682", 
+#                                                  "ASV_122" ,  "ASV_14" ))
+# 
+
+p  = ggtree(MyTree_HM, layout = "rectangular",ladderize = F) %<+% df.tax_HM
+
+ p_tree <- 
+  p +  
+   geom_tippoint(aes(color= Family), size=2, show.legend = T ) +
+  theme_tree2() +
+  #geom_tiplab (align = T) +
+  theme (plot.margin = unit (c(8,1,12,1), "mm")) + 
+  xlim(NA, 0.34) +
+  theme (legend.position = "none") +
+   geom_cladelabel (node = 147, label = "G.", angle = 90, align = T, hjust = 0.4,  offset.text = 0.005) +
+   geom_cladelabel (node = 91, label = "Acaulosporaceae", angle = 90, align = T, hjust = 0.5, offset.text = 0.005) + 
+   geom_cladelabel (node = 84, label = "Gigas.", angle = 90, align = T, hjust = 0.5,  offset.text = 0.005) +
+   geom_cladelabel (node = 66, label = "D.", angle = 90, align = T, hjust = 0.2,  offset.text = 0.005) +
+   geom_cladelabel (node = 78, label = "Cl.", angle = 90, align = T, hjust = 0.3,  offset.text = 0.005) +
+   geom_cladelabel (node = 81, label = "A.", angle = 90, align = T, hjust = 0.3,  offset.text = 0.005)
+
+
+#  get the order of the tree tips for use in the DAA plot
+order_taxa_HM <- 
+  get_taxa_name(p) %>%  
+  as_tibble () %>% 
+  dplyr::rename ("ASV_ID" = "value") %>%  
+  left_join (taxa_names_HM) %>% 
+  add_column (order = c(1:74))  # change by hand if needed
+
+# 
+DAA_HM_data <- 
+DAA_HM  %>%   
+  left_join (order_taxa_HM %>% select (ASV_ID, order), by = "ASV_ID") %>% 
+  left_join(meta_plants) 
+
+### plot heatmap
+DAA_heatmap   <-
+  DAA_HM_data  %>% 
+  ggplot (aes (x = reorder (PlantSpeciesfull, M1_M2_order), y = reorder (ASV_ID, -order), fill = logFC)) +
+            geom_tile () +
+            scale_fill_gradient2(low = "#075AFF",
+                                 mid = "#FFFFCC",
+                                 high = "#FF0000") +
+            facet_wrap( (~AC.BC)) +
+ theme (axis.text.y = element_blank(), 
+        axis.ticks.y = element_blank(), 
+        axis.title = element_blank(),
+        axis.text.x = element_text(angle = 30, vjust = 0.9, hjust = 0.9)) +
+  theme (plot.margin = unit (c(5,1,5,1), "pt"))  
+  
+  
+ggarrange (p_tree, DAA_heatmap, widths = c(1,1.4))
+
+
+```
+
+
+
+
+```{r plot-richness-focal, include=F}
+adiv_richness_all %>%  filter (roots_soil == "roots") %>%  
+  #filter (AC.BC !=  "AC")   %>% # %>% mutate_all ()
+  ggplot (aes (x =  AC.BC, y = Observed, fill = PlantFamily)) + 
+  geom_boxplot() +
+  facet_wrap(~reorder (PlantSpeciesfull, M1_M2_order), nrow = 2) +
+  theme_light () +
+  theme (axis.text.x=element_text(family= "sans", size = 9,  color = "black" ))  +
+  theme (axis.text.y=element_text(family= "sans", size = 9, color = "black"))  +
+  theme (axis.title = element_text(family = "sans", size = 11 ),  
+         legend.text=element_text(size=11), 
+         legend.position = "bottom", 
+         legend.title=element_text(size=12)) +
+  ylab ("Richness")  +
+  theme (strip.text = element_text (family = "sans", size = 11, color = "black", face = "italic")) +
+  scale_fill_manual(values=c("Asteraceae"= "#edc948" ,
+                              "Plantaginaceae"= "#4e79a7",
+                              "Poaceae" = "#7F9A65" ), name = "Plant Family")
+
+```
+
+\newpage
+
+
+## Discussion 
+
+The complex processes determining the plant-AMF community assembly are not well understood. Here, I studied the influence of a neighbouring plant community on eight plant species of differing interaction strategies in conjunction with the priority effect of different arrival orders of focal plant and plant community. 
+I hypothesised that the relative effects of plant neighbourhood and priority vary according to the focal plants’ interaction strategy. 
+The results supported that the inherent interaction traits with AMF were partly relevant for the outcome of the AMF assemblage, which was influenced by effects of priority and the neighbouring plant community. The neighbourhood effect on focal plant species clearly differed among focal plants of different functional roles, i.e., specialists *versus* generalists. The numeric specialists were most strongly impacted by the presence of a plant community, and this impact was independent from their order of arrival. These plants became even stronger specialists, decreasing in their AMF community richness when grown in a plant community. The numeric generalists, in contrast, showed a more mixed reaction to the interplay between plant neighbourhood and order of arrival. 
+For those plants, plant species identity mattered more than interaction strategy although the outcomes of the AMF assembly showed some similar tendencies for plant species of similar interaction niche strategies. The resulting changes in the AMF assembly, especially regarding the AMF community composition, were clearly influenced by the order of arrival in some plant species. Taken together, plants differed in their relative strength when competing for AMF, respectively when controlling their AMF assembly. 
+Niche-based processes might have led to the emergence of new functional roles for some host plant species, while others remained mostly unchanged in their interaction strategies with AMF by the presence of a plant community. In what follows, I discuss these findings in detail.
+
+
+
+### Plant neighbours, not priority of arrival, determine the AMF community assembly of numeric specialist plants
+
+
+The numeric specialists, i.e., the Asteraceae, were notably impacted by the adjacent plant community, but that effect was independent from the order of arrival of the plants. My approach of contrasting the plant-AMF interaction of singly grown focal plants to that of focal plants in rich plant communities enabled me to estimate the relative contribution of neighbourhood effects versus host plant of control over the AMF community assembly. Both the AMF richness and relative AMF abundances decreased notably in the Asteraceae when they were grown in a plant community, which indicates that these plants do not exert strong top-down controls on their root AMF assembly. Instead, the loss in interaction partners for the numeric specialists could have been ascribed to competition exerted by the adjacent plants for AMF as resource or can be attributed to discrimination by the fungal symbionts. Two main aspects determine a plant’s competitiveness for AMF symbionts. First, the plant species’ ability to communicate via signalling molecules might differ. It has been reported that both the amount and composition of root exuded metabolites differ among plant between functional groups [@Dietz2020]. Second, plants may have different nutrient exchange rates, with high quality plants offering more carbon-rich product in exchange for nutrients transferred by the fungus [@Knegt2016]. It seems that the interaction with the numeric specialist plants was reduced when a mix of different plant species was present, which makes the second option, i.e., the preference of higher quality hosts the more parsimonious explanation. This suggests that, instead of a top-down effect exerted by the plants, the fungal mutualists exerted some control over the choice of interaction partner. Studies reported that while some AMF individuals maintain the nutrient transport to low-quality hosts [@Knegt2016], they discriminate between the hosts in their mycorrhizal network by preferential transferring more P and N to hosts of higher quality [@Kiers2011], which could explain the reduction in interaction abundance with AMF for the Asteraceae. 
+
+The arrival order of the numeric specialists in the plant community had no effect on their resulting AMF assemblage. A comparison revealed that the AMF compositions of the AC and BC treatments of the Asteraceae were highly similar but differed from the AMF composition of the single grown plants. While the numeric specialists might have had some early conditioning effects on their soil AMF community and via plant-soil feedbacks on later arriving plants, these plants could not assemble the same AMF community in the presence of other plants which might subsequently impact their productivity [@Heijden1998]. However, because only two plant species which originated from the same plant family were clearly numeric specialists, it is unclear whether these results are due to the plants’ interaction strategy or to other some unidentified trait shared by the two species [@Hannula2019]. The fact that these two specialists differed in their AMF diversity between the singly grown and plant community treatments might, for example, be due to a high plasticity in their interaction niche properties. High plasticity in the generalism and specialisms of the members has also been described for plant-pollinator interaction networks, and it has been suggested that opportunism and the availability of interaction partners shaped the plant-pollinator interaction networks [@Waser1996; @Petanidou2008]. A similar effect might have led to the changes in AMF richness between singly growth and community treatment of the species. With only one plant species available, the AMF species interacted opportunistically with the Asteraceae, increasing the plants’ interaction generalism, indicating at the high flexibility of the interaction niche properties, which depended on the plant neighbourhood. A high plasticity in the interaction niche properties of specialists has implication for the stability of bipartite interaction networks as these plants might be able to uphold the diversity of the AMF to a certain degree even under perturbations, for example plant species losses. Theory also predicts that niche-based processes became more relevant with species assembly, which might have been the mechanism behind the decrease in interactions with AMF species for the specialist plants. 
+
+
+### The AMF assembly of numeric generalist plants responds differently to priority versus neighbourhood effects
+
+
+The relative strengths of priority effect *versus* neighbourhood effect on the AMF community differed among the numeric generalist plants. The changes in interaction strategies for these plants were, with some exceptions, comparably small. *H. lanatus*, for example, showed the smallest changes in its interaction niche properties when it was established before the plant community, indicating that it either exerted strong control over its AMF assembly (top-down effect) or that this species is preferentially colonised by a large number of AMF species, presumably due its desirable interaction traits. In Chapter 3, I identified *H. lanatus* as the strongest numeric generalist regarding its interaction with AMF but comprising a notably high within-species AMF similarity, indicative of selective assembly mechanisms. This selectivity might be the reason why the influence of the plant neighbourhood on the *H. lanatus* AMF community was small, especially in the cases when *H. lanatus* arrived early in the community which allowed the plant to establish its preferred AMF community. In contrast, the interaction properties of *A. capillaris* were strongly influenced by its plant neighbours, although *A. capillaris* is, like *H. lanatus*, a plant of high $\alpha$- and low $\beta$-diversity, therefore also indicating high selectivity for specific AMF. It seems that while the interaction strategies of the numeric generalist can explain some of the directions of the neighbourhood influence, its absolute strength depends on the plant species identity and that of the neighbouring plant community. While similar results have been described for the identity of the plant neighbours, these studies often tested only the influence of plant neighbours on a single focal plant species, which made it difficult to estimate the relative influence of the identity of the focal plant versus that of the plant neighbourhood [@Mummey2005; @Morris2013; @Mony2021]. 
+Late arriving *A. capillaris* further increased its AMF numeric and phylogenetic richness relative to other treatments, which may indicate a high plasticity of its plant interaction niche properties. At the arrival of *A. capillaris*, a highly diverse AMF network had been assembled by the established plant community, and stochastic effects might have driven the outcome of AMF community assembly of *A. capillaris* [@EncinasViso2016; @Powell2016]. 
+
+A different picture emerges if the changes in the AMF abundances are included in the interpretation. The studied plants showed clear tendencies of either increase or decrease of closely related AMF species in their AMF communities due to the addition of a plant neighbourhood. 
+However, which group of AMF increased depended on the plant host, which might hint at mechanisms that somewhat resulted in the assignment of interaction roles in the plant community. These changes in AMF taxon abundances might have decreased the overlap between the AMF communities of the different plant species from the community. Due to that preferential fungal assembly, the AMF species might benefit from less competition for root space, especially in the roots of the specialists [@Engelmoer2014; @Maherali2007]. 
+On the other hand, biological market theory predicts that the maintenance of multiple host plants is favourable for an AMF species as it decreases the fungus’ dependence on a single host plant by ensuring a continuous supply of carbon-rich products [@Buecking2016] and, in turn, increases competition between the plants, possibly resulting in better nutrient exchange rates [@Wyatt2014; @Fellbaum2014]. Taken together, these possible but opposing explanations for the changes in the AMF communities of the focal plants show the need to examine the plant-AMF network for the entire plant community.
+
+### Net Priority effects depend on plant species identity 
+
+In contrast to my hypotheses, the plants’ interaction strategies did not determine the relative effect of their order of arrival on the final AMF assembly. However, the focal plants' numeric richness of AMF aligned with the net priority effects they experienced in community, with the numeric specialist plants showing no changes in their AMF community and its properties due to the order of arrival. 
+In contrast, the order of arrival mattered for the AMF assembly of the numeric generalist plants but the relative impact on both the interaction niche properties and the AMF abundances differed among these species.
+For example, the net priority effect was most notable for *B. willdenowii* and *A. capillaris* among all six studied AMF generalist plants, but for these two plants, the priority effect led to opposite outcomes. *B. willdenowii* interacted with a less phylogenetically diverse AMF community of smaller AMF abundances when it arrived earlier in the plant community, whereas *A. capillaris* hosted a more rich AMF community of higher abundances as an early arrival. 
+These results indicate that the AMF community assembly is governed by a complex interplay between plant host identity, neighbourhood plants and order of arrival. Studies examining the interplay between AMF host plant [@Powell2016] and neighbouring plants [@Bittebiere2020] on the AMF community assembly and AMF response have also described different outcomes of the assembly depending on the identity of the respective plant species [@Sepp2019; @Zhang2020b; @Krueger2017]. In addition, host plant age [@Smilauer2021], AMF identity and AMF richness [@Vahter2020; @Varga2016] were reported as influences on the AMF assembly process. 
+
+Early arriving plants can change the composition of the microbial community in the soil [@Zhalnina2018; @Wei2019], which, in turn, can affect the soil conditions, e.g., nutrient availability [@Hassani2018; @Vandenkoornhuyse2015]. These changes can have positive or negative impacts on the establishment and growth of later arriving species [@Klironomos2002; @Grman2010; @Wei2019]. Seedlings may benefit from a large AMF network of several connected species through improved nutrient transfer [@Varga2016]. On the other hand, AMF might preferentially interact with the more developed early arrivals due to their higher productivity, instead of seeking attachment to the late arriving plants. Due to the higher competitiveness of these established plants, a late arrival might remain uncolonised by AMF, or become colonised by AMF of low mutualistic benefit. Both priority and the plant neighbourhood affect the AMF community assembly and their relative strength depends on the plant species identity. For most of the plant species studied, the order of arrival mattered for the assembly of their AMF community. These resulting differences might impact the productivity of the respective host plants which can subsequently lead to different outcomes in the community assembly of the plants [@Vogelsang2006; @Heijden1998; @GarciadeLeon2016; @Burkle2015]. Priority of plant arrival is a significant determinant of productivity and species composition of the resulting plant community [@Weidlich2017], and the microbial community has been suggested as significant determinant mediating the plant community assembly. However, the effect of priority on the AMF community assembly had not been examined in detail before. 
+
+
+### Conclusion
+
+I showed that the relative importance of priority of arrival and neighbourhood effect on the AMF community assembly differed between focal plant species that were numeric specialists or generalists. Contrary to my hypothesis, the AMF selectivity the plants had shown when grown alone did not predict how strongly they were impacted by their neighbourhood plants. Overall, the influence of priority was smaller than that of the neighbourhood and for the numeric specialist, the priority of order of arrival did not impact the strong neighbourhood effects. While these results have some possible implications for the outcome of plant-AMF assembly, it remains unclear whether the changes in the interaction niche properties had any consequences for the plant fitness. To elucidate how the order of plant arrival impacts the plant AMF community beyond changing the interaction niche properties of focal plant species, studies assessing the impact of priority on the trajectory of the plant-AMF assembly are needed. For that, examinations of the stability and productivity of plant-AMF interaction networks can be the next step to help predict the outcomes of plant-AMF community assembly.
+
+
+
+
+
+## Appendix for Chapter 4
+
+```{r Int-niche-prop, tab.id = "Int-niche-prop", label = "Int-niche-prop", tab.cap = "Mean interaction niche properties by plant species regarding their interaction with AMF. The interaction niche properties are based on several numeric and phylogenetic metrics of α- and β-diversity (richness S, unique ASVs, Shannon’s diversity H’, Chao1 diversity, Faith’s phylogenetic diversity (PD), mean phylogenetic diversity (MPD), percentage of core AMF species (βcore) and compositional units (CU)). Taken together, they describe the plants’ status as a generalist or specialist in its interaction with AMF." }
+All_metrics_M2 %>%  
+  left_join (meta_plants) %>% 
+  arrange (M1_M2_order) %>% 
+  filter (roots_soil == "roots") %>% 
+  mutate (AC.BC = str_replace(AC.BC, "M1", "single")) %>% 
+  select (PlantSpeciesfull, AC.BC, Richness, Chao1, Shannon, uniqueASV, CU, 'ß(core)', PD, MPD, PlantFamily) %>% 
+  dplyr::rename ("Plant species" = "PlantSpeciesfull", "treatment" = "AC.BC", "Plant family" = "PlantFamily", "unique ASVs" = "uniqueASV", "Richness S" = "Richness", "Shannon's diversity H'"="Shannon", "Chao1 diversity" = "Chao1" ) %>% 
+  mutate (round (across (where (is.numeric)), 2)) %>% 
+    flextable () %>%  italic (part = "body", j = "Plant species")
+
+```
+
+
+
+```{r richness-tTest-table, tab.id = "richness-tTest-table", label = "richness-tTest-table", tab.cap = "T-test comparison of the treatment means of the mean AMF richness by focal plant species. Significant results (bold) indicate changes of the AMF richness between the treatments. AC = focal plant was added after the established plant community, BC = focal plant was established before the plant community, single = single grown plant individual of focal species."}
+t_test_richness_focal_sp %>%  
+  mutate (df = round (df), statistic = round (statistic, 1)) %>% 
+  select (!c(".y.", "p.adj", "p.adj.signif")) %>% 
+    mutate (group2 = str_replace(group2, "M1", "single")) %>% 
+  dplyr::rename ("Plant species" = "PlantSpeciesfull") %>% 
+  flextable () %>% 
+  bold (part="body", i= ~ p<0.05) %>%  
+  italic (part = "body", j = "Plant species")
+
+```
+
+
+```{r PD-tTest-table, include =T, tab.id = "PD-tTest-table", label = "PD-tTest-table", tab.cap = "T-test comparison of the treatment means of Faith's phylogenetic diversity of the AMF community by focal plant species. Significant results (bold) indicate changes of the PD between the treatment. AC = focal plant was added after the established plant community, BC = focal plant was established before the plant community, single = single grown plant individual of focal species." }
+stand_pd_Glo_all_M2 %>%  
+  left_join (meta_all) %>% 
+  left_join (meta_plants, by = "focal.sp") %>% 
+  filter (roots_soil == "roots") %>%  
+  filter (focal.sp ==  GSPlaSpe) %>% 
+  group_by (PlantSpeciesfull) %>% 
+  filter (!is.na (pd.obs)) %>% 
+  t_test(pd.obs ~ AC.BC) %>%  ## p.adj nur dann verwendet, wenn die hypothese sich nicht auf die einzelnen comparisons bezieht sondern z.b. lautet: zwischen dem AC und single treatment ist ein unterschied für ALLe planzen
+  #filter (p <0.05)  %>% 
+  mutate (df = round (df), statistic = round (statistic, 1), 
+          group2 = str_replace (group2, "M1", "single"), 
+          group1 = str_replace (group1, "M1", "single")) %>%  
+  select (!c(".y.", "p.adj", "p.adj.signif")) %>% 
+  dplyr::rename ("Plant species" = "PlantSpeciesfull") %>% 
+  flextable () %>% 
+  bold (part="body", i= ~ p<0.05) %>% 
+  italic (part="body", j = "Plant species")
+
+
+```
+
+
+
+```{r MPD-tTest-table, tab.id = "MPD-tTest-table", label = "MPD-tTest-table", tab.cap = "T-test comparison of the treatment means of the mean phylogenetic distance (MPD) of the AMF community by focal plant species. Significant results (bold) indicate changes of the MPD between the treatment. AC = focal plant was added after the established plant community, BC = focal plant was established before the plant community, single = single grown plant individual of focal species."  }
+mpd_ttest_ACBCM1 %>%   
+  select (!c(".y.", "p.adj", "p.adj.signif")) %>% 
+  dplyr::rename ("Plant species" = "PlantSpeciesfull") %>% 
+  flextable () %>% 
+  bold (part="body", i= ~ p<0.05) %>% 
+  italic (part = "body", j = "Plant species")
+
+
+
+```
+
+```{r DW-above-plot, include =F}
+meta_M2 %>% filter (AC.BC != "AC")  %>%  filter (focal.sp == GSPlaSpe) %>% mutate (DW_above = as.double(DW_above))%>%   bind_rows (meta_M1 %>% filter (roots_soil == "roots") %>%  select (focal.sp, sampleID, DW_above, AC.BC)) %>%   ggplot (aes (x = AC.BC, y = DW_above)) + geom_boxplot() + facet_wrap (~focal.sp)
+
+
+```
+
+
+```{r DW-above-tTest, include =F}
+meta_M2  %>%  filter (focal.sp == GSPlaSpe) %>% mutate (DW_above = as.double(DW_above)) %>%   bind_rows (meta_M1 %>% filter (roots_soil == "roots") %>%  select (focal.sp, sampleID, DW_above, AC.BC)) %>%  group_by (focal.sp) %>% t_test(DW_above~AC.BC)
+
+```
+
+\newpage
+

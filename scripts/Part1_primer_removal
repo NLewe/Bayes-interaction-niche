@@ -1,0 +1,78 @@
+##Part 1 
+
+## Download all data files into one folder, and also download the meta file from 
+
+ https://www.ncbi.nlm.nih.gov/home/download/
+using the following ID
+
+ BioProject ID:      PRJNA997080 
+
+
+
+####   RUN STEPS IN A LINUX TERMINAL (BASH SCRIPT) ########
+
+## Preparation - installation :
+
+https://cutadapt.readthedocs.io/en/stable/installation.html
+## install cutadapt - it needs a Linux environment. 
+# on windows, I used Ubuntu (linux environment) on WSL2 (windows subsystem) to run cutadapt 
+# All demultiplexing was done on the High Performance Computing system "Rapoi" of Victoria University of Wellington (New Zealand).
+
+
+## Primer removal with cutadapt ###
+
+# After demultiplexing of the raw sequence libraries with cutadapt, which removed the barcode sequences whilst demultiplexing,  
+# the primer sequences need to be removed as well
+# A linux environment (bash) with cutadapt installed is again needed for that step.
+
+# First a new directory is made, for example "Lib_primer_removed"
+
+mkdir Lib_primer_removed
+
+
+# The resulting files will be added to the new directory Lib_primer_removed in the next step
+# The command to remove all primer sequences from all downloaded fastq files in a folder is:
+
+for i in *.R1.fastq.gz
+do
+SAMPLE=$(echo ${i} | sed "s/.R1\.fastq\.gz//") 
+echo ${SAMPLE}.R1.fastq.gz ${SAMPLE}.R2.fastq.gz 
+cutadapt -m 1 -e 0.12 \
+-g "CAHCGATGAAGAACGYRG;min_overlap=6"  -a "GCATATCAATAAGCGSAGGA;min_overlap=6" \
+-G "TCCTSCGCTTATTGATATGC;min_overlap=6"  -A "CYRCGTTCTTCATCGDTG;min_overlap=6"  \
+-o Lib_primer_removed/${SAMPLE}.R1.fastq.gz \
+-p Lib_primer_removed/${SAMPLE}.R2.fastq.gz  ${SAMPLE}.R1.fastq.gz ${SAMPLE}.R2.fastq.gz \
+>> primer_summ.txt
+done
+
+# Because some of the files have a slightly different naming structure, run also:
+
+for i in *_R1.fastq.gz
+do
+SAMPLE=$(echo ${i} | sed "s/_R1\.fastq\.gz//") 
+echo ${SAMPLE}_R1.fastq.gz ${SAMPLE}_R2.fastq.gz 
+cutadapt -m 1 -e 0.12 \
+-g "CAHCGATGAAGAACGYRG;min_overlap=6"  -a "GCATATCAATAAGCGSAGGA;min_overlap=6" \
+-G "TCCTSCGCTTATTGATATGC;min_overlap=6"  -A "CYRCGTTCTTCATCGDTG;min_overlap=6"  \
+-o Lib_primer_removed/${SAMPLE}.R1.fastq.gz \
+-p Lib_primer_removed/${SAMPLE}.R2.fastq.gz  ${SAMPLE}_R1.fastq.gz ${SAMPLE}_R2.fastq.gz \
+>> primer_summ.txt
+done
+
+### Notes:
+#  -g is the anchored forward (FWD) primer
+#  -a is the complementary inverse reverse primer.
+#  -G is the anchored reverse (REV) primer
+#  -A is the complementary inverse forward primer
+
+## Explanations on the use of cutadapt can be found in 
+
+https://cutadapt.readthedocs.io/en/stable/guide.html#
+
+# The authors humbly thank the cutadapt developer Marcel Martin https://github.com/marcelm for their amazing work and their thorough manual. 
+
+
+## Note that the fastq files of this project originate from different experiments. 
+## All following steps should be run separately on the files from each experiment ##
+
+

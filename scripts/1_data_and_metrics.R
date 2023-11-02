@@ -31,6 +31,7 @@ ps_Glo_E1_8Sp <- subset_samples (ps_Glo, PlaSpe == "AchMil" | PlaSpe == "CicInt"
                   PlaSpe == "BroWil"| PlaSpe == "PoaCit"| PlaSpe == "HolLan"| 
                   PlaSpe == "PlaLan"| PlaSpe  == "SchAru")
 
+
 ps_Glo_E1_8Sp <- prune_taxa (taxa_sums (ps_Glo_E1_8Sp) > 1, ps_Glo_E1_8Sp)
 
 
@@ -236,9 +237,11 @@ adiv_richness %>%
                mutate (mean_pd = mean (pd.obs), mean_mpd = mean (mpd.obs)) %>%  
                select (PlantSpeciesfull,   mean_pd, mean_mpd, -PlantFamily)   %>% 
                unique ())  %>% 
-  dplyr::rename("Richness"= "mean_n_ASV_per_species", "CU" = "CUnits", "β(core)"  = "perc_core",
-                "PD" = "mean_pd", "MPD" = "mean_mpd", "uniqueASV" = "uniqueASVsperPlSpe" )  %>% 
-  add_column (Exp = "E1")
+  left_join (ses.MPD_Glo_PlaSpe %>%  select (sampleID, mpd.obs), by = c("PlantSpeciesfull" = "sampleID")) %>% 
+dplyr::rename("Richness S"= "mean_n_ASV_per_species","Shannon's H'" = "Shannon", "β(CU)" = "CUnits", "β(core)"  = "perc_core",
+                "PD" = "mean_pd", "MPD" = "mean_mpd", "γ-diversity" = "uniqueASVsperPlSpe", "Phyl. γ-diversity" = "mpd.obs" )  %>% 
+    add_column (Exp = "E1") %>% 
+  select (-PD)
 
 
 # df of  
@@ -261,6 +264,7 @@ All_metrics_E1_8Sp_df <-
   All_metrics_E1_8Sp %>% 
   as.data.frame(row.names = NULL)
 
+
 rownames(All_metrics_E1_8Sp_df)  <- All_metrics_E1_8Sp_df$PlantSpeciesfull
 All_metrics_E1_8Sp_df  <- All_metrics_E1_8Sp_df[,-1]
 
@@ -276,9 +280,11 @@ All_metrics_E1_samples <-
   select (!c(PlantType, Chao1, unique))  %>% 
   left_join (stand_pd_Glo_all %>% select (sampleID, pd.obs)) %>% 
   left_join (ses.MPD_Glo %>%  select (sampleID, mpd.obs) )  %>% 
+  left_join (ses.MPD_Glo_PlaSpe %>%  select (sampleID, mpd.obs), by = c("PlantSpeciesfull" = "sampleID")) %>% 
   dplyr::rename("Richness"= "Observed", "CU" = "CUnits", "β(core)"  = "perc_core",
-                "PD" = "pd.obs", "MPD" = "mpd.obs", "uniqueASV" = "uniqueASVsperPlSpe" )  %>% 
-  add_column (Exp = "E1") 
+                "PD" = "pd.obs", "MPD" = "mpd.obs.x", "uniqueASV" = "uniqueASVsperPlSpe", "y_MPD" = "mpd.obs.y" )  %>% 
+  add_column (Exp = "E1") %>% 
+  select (-PD)
 
 
 
@@ -458,9 +464,15 @@ All_metrics_E2 <-
   left_join (comp_units_M1 %>%  select (!'1-CU'))    %>%   #includes CU and unique and richness
   left_join(cores_roots_M1) %>% 
   left_join (PD_MPD_M1) %>% 
-  dplyr::rename("Richness"= "meanASV", "CU" = "CUnits", "β(core)"  = "perc_core",
-                "PD" = "mean_pd", "MPD" = "mean_mpd" , "uniqueASV" = "uniqueASVsperPlSpe") %>% 
-  add_column (Exp = "E2")
+  left_join (ses.MPD_Glo_PlaSpe_M1 %>%  
+               select (sampleID, mpd.obs), by = c("PlantSpeciesfull" = "sampleID")) %>% 
+  dplyr::rename("Richness S"= "meanASV", "Shannon's H'" = "Shannon", "β(CU)" = "CUnits", "β(core)"  = "perc_core",
+                "PD" = "mean_pd", "MPD" = "mean_mpd" , "γ-diversity" = "uniqueASVsperPlSpe", 
+                "Phyl. γ-diversity" ="mpd.obs") %>% 
+  add_column (Exp = "E2") %>% 
+  select (-PD)
+
+#add_column (metric2 = c("Shannon's H", "Richness S", "γ-diversity", "β(CU)", "β(core)", "MPD", "Phyl. γ-diversity"))
 
 
   # df 
@@ -478,10 +490,12 @@ All_Metrics_E2_sample  <-
   left_join(cores_roots_M1) %>% 
   left_join (stand_pd_Glo_all_M1 %>%  select (sampleID, pd.obs)) %>%
   left_join (ses.MPD_Glo_M1 %>%  select (sampleID, mpd.obs) )  %>% 
+  left_join (ses.MPD_Glo_PlaSpe_M1 %>%  select (sampleID, mpd.obs), by = c("PlantSpeciesfull" = "sampleID")) %>% 
   select (!meanASV) %>% 
   dplyr::rename("Richness" = "Observed","CU" = "CUnits", "β(core)"  = "perc_core",
-                 "uniqueASV" = "uniqueASVsperPlSpe", "MPD" = "mpd.obs", "PD" = "pd.obs") %>% 
-  add_column (Exp = "E2")
+                 "uniqueASV" = "uniqueASVsperPlSpe", "MPD" = "mpd.obs.x", "PD" = "pd.obs", "y_MPD" = "mpd.obs.y" ) %>% 
+  add_column (Exp = "E2") %>% 
+  select (-PD)
 
 saveRDS(All_Metrics_E2_sample, "results/All_metrics_E2_sample.rds")
 
@@ -621,4 +635,7 @@ A <- ape::vcv.phylo(treeML)
 dataNLPL %>% mutate (totDW = DW_roots + DW_above) %>% ungroup () %>%  cor_test (RelGenSpec, totDW)
   
  dataNLPL %>% mutate (totDW = DW_roots + DW_above) %>% ungroup () %>%  cor_test (RelGenSpec, DW_above   )
+
+ dataNLPL %>% mutate (totDW = DW_roots + DW_above) %>% ungroup () %>%  cor_test (RelGenSpec, DW_roots   )
  
+  

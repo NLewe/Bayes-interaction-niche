@@ -3,6 +3,7 @@ library (FactoMineR)
 library(factoextra)
 library(ggrepel)
 library (ggpubr)
+library (tidyverse)
 
 
 
@@ -19,6 +20,7 @@ PCA_metric_data   <- PCA_all_metrics_E1$ind$coord  %>%  as_tibble(rownames = "Pl
   left_join(metaM0 %>%  select (PlantSpeciesfull, PlantFamily) %>%  unique ())
 
 PCA_eig_m_Dim1 <- round (PCA_all_metrics_E1$eig[1,2],1)
+
 PCA_eig_m_Dim1
 PCA_eig_m_Dim2 <- round (PCA_all_metrics_E1$eig[2,2],1)
 PCA_eig_m_Dim2
@@ -39,7 +41,7 @@ plotPca  <-
                     color = "blue", inherit.aes = F , force = 0.6) + 
   geom_text_repel(data = PCA_metric_data, aes (x = Dim.1, y = Dim.2, label = PlantSpeciesfull), fontface = "italic", inherit.aes = F) +
   theme_minimal() + 
-  xlab(label = "PC1 (88 %)") +
+  xlab(label = "PC1 (86 %)") +
   ylab ("PC2 (6 %)") + 
   guides (color= guide_legend( "Plant family")) +
   theme (legend.position = "bottom") +
@@ -72,7 +74,7 @@ ggarrange (plotPca,
 
 
 ##calc of eigenvalues for PC1 for text
-PCA_all_metrics_E2 <- PCA(All_metrics_E2_df, quali.sup = c(8,9,10),   scale.unit = T, graph = F)
+PCA_all_metrics_E2 <- PCA(All_metrics_E2_df , quali.sup = c(8,9,10),   scale.unit = T, graph = F)
 
 #PCA Exp 2 ####
 
@@ -80,7 +82,9 @@ PCA_all_metrics_E2 <- PCA(All_metrics_E2_df, quali.sup = c(8,9,10),   scale.unit
 PCA_arrows_metrics<-
   PCA_all_metrics_E2$var$coord %>%  
   as_tibble (rownames = "metric") %>% 
-  dplyr::rename("D1end" = "Dim.1", "D2end"= "Dim.2")
+  dplyr::rename("D1end" = "Dim.1", "D2end"= "Dim.2", "D3end" = "Dim.3") %>% 
+  add_column (metric2 = c("Shannon's H", "Richness S", "γ-diversity", "β(CU)", "β(core)", "MPD", "Phyl. γ-diversity"))
+
 
 PCA_metric_data   <- PCA_all_metrics_E2$ind$coord  %>%  as_tibble(rownames = "PlantSpeciesfull") %>% 
   left_join(metaM0 %>%  select (PlantSpeciesfull, PlantFamily) %>%  unique ())
@@ -106,15 +110,45 @@ plotPca  <-
                     color = "blue", inherit.aes = F , force = 0.6) + 
   geom_text_repel(data = PCA_metric_data, aes (x = Dim.1, y = Dim.2, label = PlantSpeciesfull), fontface = "italic", inherit.aes = F) +
   theme_minimal() + 
-  xlab(label = "PC1 (74 %)") +
-  ylab ("PC2 (17 %)") + 
+  xlab(label = "PC1 (64 %)") +
+  ylab ("PC2 (22 %)") + 
+  guides (color= guide_legend( "Plant family")) +
+  theme (legend.position = "bottom") +
+  scale_color_manual(values=c("Asteraceae"= "#edc948" ,"Cyperaceae" ="#5A6351" ,
+                              "Fabaceae" = "#f28e2b" , 
+                              "Plantaginaceae"= "#4e79a7","Soil control"= "#9c755f",
+ 
+                              
+                                                           "Poaceae" = "#7F9A65" )) 
+
+
+# Dim 2 and 3 Exp 2 ###
+PCA_eig_m_Dim3 <- round (PCA_all_metrics_E2$eig[3,2],1)
+PCA_eig_m_Dim3
+
+
+plotPca_2_3  <- 
+  PCA_metric_data %>%  
+  mutate (PlantFamily = str_replace(PlantFamily, "Soil","Soil control")) %>% 
+  ggplot (aes (x = Dim.2, y = Dim.3, color = PlantFamily)) + 
+  geom_point (size =3) +
+  geom_hline(yintercept = 0, lty = 2, color = "grey", alpha = 0.9) + 
+  geom_vline(xintercept = 0, lty = 2, color = "grey", alpha = 0.9) + 
+  #stat_ellipse(aes (x= Dim.1, y = Dim.2, color = group))  +   # thisis 95%confidence
+  geom_segment(data = PCA_arrows_metrics, aes (x=0, xend= D2end*4.5, y = 0, yend = D3end*4.5), 
+               arrow = arrow(length = unit(0.3, "picas")), color = "blue", inherit.aes = F)  +
+  geom_text_repel ( data = PCA_arrows_metrics, aes (x  = D2end*4.5, y = D3end*4.5, label = metric1), 
+                    color = "blue", inherit.aes = F , force = 0.6) + 
+  geom_text_repel(data = PCA_metric_data, aes (x = Dim.2, y = Dim.3, label = PlantSpeciesfull), fontface = "italic", inherit.aes = F) +
+  theme_minimal() + 
+  xlab(label = "PC2 (22 %)") +
+  ylab ("PC2 (7.6 %)") + 
   guides (color= guide_legend( "Plant family")) +
   theme (legend.position = "bottom") +
   scale_color_manual(values=c("Asteraceae"= "#edc948" ,"Cyperaceae" ="#5A6351" ,
                               "Fabaceae" = "#f28e2b" , 
                               "Plantaginaceae"= "#4e79a7","Soil control"= "#9c755f",
                               "Poaceae" = "#7F9A65" )) 
-
 
 
 # plotPca  <- fviz_pca_biplot(PCA_all_metrics,axes = c(1,2), 
@@ -129,12 +163,17 @@ plot2 <- fviz_contrib(PCA_all_metrics_E2, choice = "var", axes = 2,
 plot3 <- fviz_contrib(PCA_all_metrics_E2, choice = "var", axes = 3, 
                       font.main = c(size =12 ), title= "Contribution of variables to PC3")
 
+PCAplots <- ggarrange (plotPca, plotPca_2_3, nrow = 1, ncol = 2, labels = c("A", "B"))
+           
+           ggarrange (PCAplots, ggarrange (plot1, plot2, plot3, nrow = 1, ncol= 3, labels= c("C", "D", "E")), 
+           nrow=2, ncol=1, heights =  c(2, 1)) 
+
 ggarrange (plotPca,
-           ggarrange (plot1, plot2, plot3, nrow = 3, ncol= 1, labels= c("B", "C", "D")), 
-           nrow=1, ncol=2, widths =  c(2, 1), labels= "A") 
+        ggarrange (plot1, plot2, plot3, nrow = 3, ncol= 1, labels= c("B", "C", "D")), 
+                      nrow=1, ncol=2, widths =  c(2, 1), labels= "A") 
+           
 
-
-##Procrustes analysis between PCAs#####
+##Procrustes analysis betwee  absolute #####
 
 
 ## Needs 
@@ -237,8 +276,8 @@ plotPca_dim1_2  <-
   #geom_text_repel(data = PCA_metric_data_sample, aes (x = Dim.1, y = Dim.2, label = sampleID), 
   #                fontface = "italic", inherit.aes = F) +
   theme_minimal() + 
-  xlab(label = "PC1 (61 %)") +
-  ylab ("PC3 (17 %)") + 
+  xlab(label = "PC1 (53 %)") +
+  ylab ("PC3 (22 %)") + 
   guides (color= guide_legend( "Plant species")) +
   theme (legend.position = "bottom") 
 #+
@@ -275,8 +314,8 @@ plotPca_dim2_3  <-
   #geom_text_repel(data = PCA_metric_data_sample, aes (x = Dim.2, y = Dim.3, label = sampleID), 
   #                fontface = "italic", inherit.aes = F) +
   theme_minimal() + 
-  xlab(label = "PC2 (17 %)") +
-  ylab ("PC3 (13 %)") + 
+  xlab(label = "PC2 (22 %)") +
+  ylab ("PC3 (12 %)") + 
   guides (color= guide_legend( "Plant species")) +
   theme (legend.position = "bottom") 
 

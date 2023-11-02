@@ -41,7 +41,7 @@ plot_radar_E2 <-
 
 ggarrange (plot_radar_E1, plot_radar_E2, common.legend = T, legend = "bottom", label = "AUTO")
 
-extra <- tribble (~PlantSpeciesfull, ~Shannon, ~Richness, ~uniqueASV, ~CU, ~`β(core)`, ~PD, ~MPD, "leer", 0, 0, 0, 0, 0, 0, 0 )
+extra <- tribble (~PlantSpeciesfull,~Richness, ~Shannon, ~MPD, ~y_MPD, ~uniqueASV, ~CU, ~`β(core)`,  "leer", 0, 0, 0, 0, 0, 0, 0 )
 radar_empty  <- ggradar(extra,          background.circle.colour = "white",
                         background.circle.transparency = 0, 
                         axis.line.colour = "grey30", 
@@ -61,9 +61,10 @@ radar_plots <-
                    ungroup() %>% 
                    mutate(across(!c(PlantSpeciesfull,PlantFamily,Exp ), rescale))) %>% 
                    dplyr:: select (!PlantFamily) %>% 
+  select (PlantSpeciesfull, `Richness S`, `Shannon's H'`, MPD, `Phyl. γ-diversity`, ,`γ-diversity`, `β(CU)` ,`β(core)`, Exp ) %>% 
   #mutate (`β(core)` = `β(core)`/100) %>% 
    # select (!uniqueASV) %>% 
-  group_split(PlantSpeciesfull) %>% 
+  group_split(PlantSpeciesfull ) %>% 
   map (~dplyr::select (., -PlantSpeciesfull) %>% relocate (Exp)) %>% 
   map (~ggradar(.,          background.circle.colour = "white",
                 background.circle.transparency = 0, 
@@ -101,7 +102,8 @@ All_metrics_E1_8Sp %>%
                ungroup() %>% 
                mutate(across(!c(PlantSpeciesfull,PlantFamily,Exp), rescale))) %>% 
   dplyr::select (-PlantFamily)  %>% 
-  mutate (RelGenSpec = (Shannon + Richness + uniqueASV + CU + `β(core)` + PD + MPD) /7 )
+ # mutate (RelGenSpec = (Shannon + Richness + uniqueASV + CU + `β(core)` + PD + MPD) /7 )
+  mutate (RelGenSpec = (Shannon + Richness + uniqueASV + CU + `β(core)` + y_MPD + MPD) /7 )
 
 ## table for plant species ###
 RelGen_E1_E2 %>%  
@@ -119,7 +121,8 @@ All_Metrics_E2_sample %>%
   bind_rows (All_metrics_E1_samples %>%    
                ungroup() %>% 
                mutate(across(!c(PlantSpeciesfull,PlantFamily,PlaSpe, Exp, sampleID), rescale))) %>% 
-  mutate (RelGenSpec = (Shannon + Richness + uniqueASV + CU + `β(core)` + PD + MPD) /7 ) %>% 
+  #mutate (RelGenSpec = (Shannon + Richness + uniqueASV + CU + `β(core)` + PD + MPD) /7 ) %>% 
+  mutate (RelGenSpec = (Shannon + Richness + uniqueASV + CU + `β(core)` + y_MPD + MPD) /7 )
   relocate (where (is.numeric)) 
 
 # experiment 2 sorting for highest generalist

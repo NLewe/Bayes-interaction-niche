@@ -19,16 +19,17 @@ library(GGally)
 
 
 # data 
-PCA_metric_data_sample <- readRDS ("results/PCA_metric_data_sample.rds")
+#PCA_metric_data_sample <- readRDS ("results/PCA_metric_data_sample.rds")
 
-dataNL_sample <- dataNL %>%  left_join (PCA_metric_data_sample) %>%  # AMF soil is in nmol
-  left_join(RelGen_E1_E2_sample %>%  dplyr::select (sampleID, RelGenSpec  )) %>% 
-  filter (!is.na (AMF),  !is.na (RelGenSpec)) %>% 
-  filter (sampleID != "R18")  %>%   ## plant lost shoot biomass as it was almost dead
-    dplyr::select (!starts_with ("Dim")) %>% 
-  mutate (DWRA = DW_roots /DW_above )#%>% 
- # mutate (AMFlog = log (AMF), RGlog = log (RelGenSpec), DWR = log (DW_roots), DWA = log (DW_above))  
-### these made the mdel terrible
+# dataNL_sample <- dataNL %>%  
+#   #left_join (PCA_metric_data_sample) %>%  # AMF soil is in nmol
+#   left_join(RelGen_E1_E2_sample %>%  dplyr::select (sampleID, RelGenSpec  )) %>% 
+#   filter (!is.na (AMF),  !is.na (RelGenSpec)) %>% 
+#   filter (sampleID != "R18")  %>%   ## plant lost shoot biomass as it was almost dead
+#     dplyr::select (!starts_with ("Dim")) %>% 
+#   mutate (DWRA = DW_roots /DW_above )#%>% 
+#  # mutate (AMFlog = log (AMF), RGlog = log (RelGenSpec), DWR = log (DW_roots), DWA = log (DW_above))  
+# ### these made the mdel terrible
 
 # waht is the distribution of the data?
 (hist <- ggplot(dataNL_sample, aes(x = DWRA )) +
@@ -50,7 +51,7 @@ plot (mod)
 
 # 0A Specify  model 0####
 ## get default  priors  #### 
-prior0 <- get_prior ( AMF ~ RelGenSpec * DWRA + (1|gr(PlaSpe, cov = A)) ,
+priorG <- get_prior ( AMF ~ RelGenSpec * DWRA + (1|gr(PlaSpe, cov = A)) ,
                        ### is only needed to account for diff between the species 
                       #+ OTHER than phylogenetic (environmental factors, niches)
                        family = skew_normal (),
@@ -65,7 +66,7 @@ Gen_samples_fit0 <- brm(
   data = dataNL_sample,
   family = skew_normal(),
   data2 = list(A = A),
-  prior = prior0,  chains = 4, cores = 8,
+  prior = priorG,  chains = 4, cores = 8,
   iter = 2000, warmup = 500
 )
 

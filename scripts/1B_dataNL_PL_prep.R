@@ -4,6 +4,7 @@
 # packages #####
 library(tidyverse)
 library(readxl)
+library (rstatix)
 # data  ####
 
 ## all  data is prepared in the R_interaction_niches project ##
@@ -17,8 +18,8 @@ meta_M1Wcontrol <- read_xlsx ("data/meta_M1Wcontrol.xlsx")
 # NL data ##
 dataNLrootstosoil <- read_rds ("data/dataNLrootstosoil.rds")# NLFA_data for exp 2 #
 dataNL <- dataNLrootstosoil %>%  select (sampleID, AMF, AMFroot, ID, PlaSpe, PlantSpeciesfull, 
-                                         DW_above, DW_roots, totalAMF, PlantFamily) %>% 
-  mutate (AMF = 1000 * AMF)  # soil AMF is now in nmol
+                                         DW_above, DW_roots, totalAMF, PlantFamily) %>% # both are in µmol per g substrate
+  mutate (AMF = 1000 * AMF)  # soil AMF is now in nmol per g
 
 # tree data ##
 A <- read_rds ("data/covariance_str_tree_trnl_plants.rds") #covaraince structure based on trnl tree , for glmm models
@@ -60,6 +61,48 @@ All_metrics_E1_8Sp %>%  rbind(All_metrics_E2) %>%
   select (!PlantFamily) %>% write_excel_csv("results/All_metrics_E1_8Sp.csv")
 
 
+# test statistical difference of means of biomass between plant species #####
+# 
+#First, check assumptions for the tests 
+# 
+## shapiro test normality 
+dataNLrootstosoil %>%  group_by (PlaSpe) %>%  shapiro_test(AMF)
+
+## bartletts test for homoscedasticity
+bartlett.test(dataNLrootstosoil$AMF, dataNLrootstosoil$PlantSpeciesfull)
+
+##because AMF biomass in soil does not meet the assumption of normality, non-parametric Kruskal-wallis is used
+dataNLrootstosoil %>% ungroup () %>% kruskal_test(AMF~ PlaSpe)
+
+# AMF biomass in the roots ####
+## shapiro test normality 
+dataNLrootstosoil %>%  group_by (PlaSpe) %>%  shapiro_test(AMFroot)
+
+## bartletts test for homoscedasticity
+bartlett.test(dataNLrootstosoil$AMFroot, dataNLrootstosoil$PlantSpeciesfull)
+
+# AMF biomass in the roots does meet assumpions, Anova is used ##
+dataNLrootstosoil %>% ungroup () %>% anova_test(AMFroot~ PlaSpe)
+
+
+# AMF biomass in the roots ####
+## shapiro test normality 
+dataNLPL %>%  
+  ungroup () %>% 
+  group_by (PlaSpe) %>% 
+  shapiro_test(totalBact)
+
+## bartletts test for homoscedasticity
+bartlett.test(dataNLPL$totalBact, dataNLPL$PlaSpe)
+
+# AMF biomass in the roots does meet assumpions, Anova is used ##
+dataNLPL %>% ungroup () %>% kruskal_test(totalBact~ PlaSpe)
+
+
+
+
+
+
 
 # table S 6 alpha diversity per sample  #
 adiv_richness %>%  
@@ -71,131 +114,3 @@ adiv_richness_M1 %>%  select (-PlaSpe, -PlantFamily) %>%
   mutate (Shannon = round (Shannon, 3)) %>% 
   write_excel_csv("results/tableS6_alpha_div_E2.csv")
 
-# Table S  dada resuls ####
-
-dada <- read_csv("results/track_reads_M0_PP.csv")
-
-
-dada_E1_8Sp <- meta_M1 %>%  select (PlaSpe) %>% unique  () %>% left_join (dada, by = "PlaSpe")  %>%
-  tibble () %>%  select (-sortedPlantSpecies, - PlantFamily, -PlantType, -value)
-
-# all reads ##
-
-dada_E1_8Sp %>%  summarize (sum (input))
-
-dada_E1_8Sp %>%  summarize (sum (nonchim))
-
-
-
-## get number of ASVs,  etc  ##
-
-ps_ALL_E1 <- readRDS("data/ps_ALL_E1.rds") ## needs ps of experiment 1 
-
-ps_ALL_E1_8Sp <- subset_samples (ps_ALL_E1, PlaSpe == "AchMil"| PlaSpe == "CicInt" |
-                                   PlaSpe == "SchAru"| PlaSpe == "PoaCit"|
-                                   PlaSpe == "PlaLan"| PlaSpe == "HolLan"|
-                                   PlaSpe == "BroWil"| PlaSpe == "AgrCap") # filterd for the plants f interest
-ps_ALL_E1_8Sp  <-  prune_taxa (taxa_sums(ps_ALL_E1_8Sp)>=1, ps_ALL_E1_8Sp) ## ASVs removed that are not found in those 8 species
-
-## 
-estimate_richness(ps_ALL_E1_8Sp) %>% summarize (n = mean (Observed),sd = sd (Observed))  # to get average ASV per smalple
-estimate_richness(ps_ALL_E1_8Sp) %>%  arrange( Observed)
-
-# `rarefaction-ALL, fig.cap = "A) Rarefaction (solid line segments) and extrapolation (dotted line segments) 
-#sampling curves of fungal ASV richness for each plant species and soil. B) Sample completeness curves by sequence reads. c) Sample coverage curves. Shaded areas in each plot show the 95% confidence interval of the extrapolation. ", fig.height=8, fig.width=12, dpi = 300 }
-#agglomerate to Plant Species
-ps_ALL_E1_8Sp_perPlaSpe  <- merge_samples(ps_ALL_E1_8Sp, group = "PlantSpeciesfull")
-
-#make df for Glo_PlaSpe data (empty samples samples pruned )
-comm_df_ALL_E1_8Sp_PlaSpe  <- data.frame (otu_table (ps_ALL_E1_8Sp_perPlaSpe))### needs ps with all asvs only 8plants)) 
-
-library (iNEXT)
-#rarefaction in iNEXT 
-# iNext_ALL_E1_8_sp_PlaSpe_richness <- iNEXT (t (comm_df_ALL_E1_8Sp_PlaSpe), 
-#                                     q= 0, # richness
-#                                     datatype =  "abundance", 
-#                                     endpoint = NULL, 
-#                                     knots = 400 )
-# 
-# write_rds(iNext_ALL_E1_8_sp_PlaSpe_richness, "results/iNext_ALL_E1_8_sp_PlaSpe_richness.rds")
-# # plot 
-# p1 <- ggiNEXT(iNext_ALL_E1_8_sp_PlaSpe_richness, type = 1) +
-#   theme_classic() + 
-#   scale_shape_manual(values = c(0,1, 2,3,4,5,6,7)) + 
-#   scale_y_continuous (name = "ASV richness") +
-#   scale_x_continuous(name = "Number of sequence reads")+
-#   theme (axis.text = element_text(size =14), 
-#          axis.title = element_text(size =18),
-#          legend.text = element_text(face = "italic"))+
-#   guides(     colour=guide_legend(title="Plant species"), 
-#               fill=guide_legend(title="Plant species"), 
-#               shape=guide_legend(title="Plant species"))
-# 
-# 
-# p2 <- ggiNEXT(iNext_ALL_E1_8_sp_PlaSpe_richness, type = 2) +
-#   theme_classic() + 
-#   scale_shape_manual(values = c(0,1, 2,3,4,5,6,7)) + 
-#   scale_x_continuous(name = "Number of sequence reads")+
-#   theme (axis.text = element_text(size =14), 
-#          axis.title = element_text(size =18), 
-#          legend.text = element_text(face = "italic"))+
-#   guides(     colour=guide_legend(title="Plant species"), 
-#               fill=guide_legend(title="Plant species"), 
-#               shape=guide_legend(title="Plant species"))
-
-# p3 <- ggiNEXT(iNext_ALL_E1_8_sp_PlaSpe_richness, type = 3) +
-#   theme_classic() + 
-#   scale_shape_manual(values = c(0,1, 2,3,4,5,6,7)) + 
-#   scale_y_continuous(name = "ASV richness")+
-#   scale_x_continuous (labels = scales::percent) + 
-#   theme (axis.text = element_text(size =14), 
-#          axis.title = element_text(size =18),  
-#          legend.text = element_text(face = "italic"))+
-#   guides(     colour=guide_legend(title="Plant species"), 
-#               fill=guide_legend(title="Plant species"), 
-#               shape=guide_legend(title="Plant species"))
-
-
-
-
-### rarefy results?###
-
-
-### AMF families description ####
-Glo_total_counts_E1_8Sp  <-ASV_table_Glo  %>%  
-  select (-c(Kingdom, Phylum, Class, Order, Genus, Species))  %>%  
-  pivot_longer (!c(Family, ASV_ID), names_to = "sampleID", values_to="counts")  %>%
-  summarize(total=sum(across(counts)))
-
-
-
-Glo_Fam_perc_reads_E1_8Sp  <- 
-  ASV_table_Glo  %>%  
-  select (-c(Kingdom, Phylum, Class, Order, Genus, Species))  %>%  
-  pivot_longer (!c(Family, ASV_ID), names_to = "sampleID", values_to="counts")  %>%
-  group_by (Family)  %>% 
-  summarize(Fam_sum=sum(counts)) %>% 
-  add_column (Glo_total_counts_E1_8Sp)  %>% 
-  mutate (Glo_Fam_perc = 100  * Fam_sum/total)  %>% 
-  arrange(desc(Fam_sum))  %>% 
-  as.data.frame()
-
-ASV_table_Glo  %>%  
-  select (-c(Kingdom, Phylum, Class, Order, Genus, Species))  %>%  
-  pivot_longer (!c(Family, ASV_ID), names_to = "sampleID", values_to="counts")  %>%
-  group_by (Family) %>%  select (-sampleID) %>% filter (counts!= 0) %>% 
-  select (-counts) %>%  unique () %>%
-  group_by(Family ) %>%  tally ()
- 
-ASV_table_Glo  %>%  
-  select (-c(Kingdom, Phylum, Class, Order, Genus, Species))  %>%  
-  pivot_longer (!c(Family, ASV_ID), names_to = "sampleID", values_to="counts") %>% 
-  select (-Family) %>% filter (counts!=0) %>% 
-  group_by (sampleID)  %>% 
-  tally () %>% 
-  summarize (meanASV = mean (n))
-
-
-%>%
-  group_by (Family) %>%  select (-sampleID) %>% filter (counts!= 0) %>% select (-counts) %>% 
-  unique () %>% group_by(Family ) %>%  tally ()                              

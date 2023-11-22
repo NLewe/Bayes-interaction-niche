@@ -500,13 +500,17 @@ Plot_RG_AMF <-
   ggplot (plot_1$`Dim.3:DW_roots`, aes (x = Dim.3, y = estimate__, color = effect2__)) +
   geom_smooth  (method = lm) + 
   geom_ribbon (aes (ymin = lower__, ymax = upper__, fill = effect2__ ), linewidth = 0, alpha = 0.5) +
-  theme_bw ( ) + 
-  theme (axis.title = element_text(size =12), 
-         legend.position = "right") +
+  theme_classic ( ) + 
+  theme (axis.title = element_text(size =16, color = "black" ), 
+         axis.text = element_text(size = 14, color = "black"),
+         legend.position = "right", 
+         legend.text = element_text(size = 14, color = "black"), 
+         legend.title = element_text(size = 16, color = "black")) +
   xlab ( "Principal component 3") +
   ylab(expression("NLFA 16:1"*omega*"5 in nmol/g soil")) +
   scale_color_manual(values = c ("darkslategray4", "coral2", "blueviolet"), name = "Root biomass") +
   scale_fill_manual (values = c ("darkslategray4", "coral2", "blueviolet"), name = "Root biomass") 
+
 
 launch_shinystan(fitAMF06New)
 

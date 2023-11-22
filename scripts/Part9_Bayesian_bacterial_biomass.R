@@ -506,7 +506,7 @@ PLFAtot_PCA_06New <- brm(
   iter = 10000, warmup = 3000
 )
 
-
+# NOTE: Additional models might have been run and discarded from the code if they did not converge #
 
 
 # Figure 3 for paper  ####
@@ -540,10 +540,6 @@ ggplot (plot_2$`Dim.1:DW_roots`, aes (x = Dim.1, y = estimate__, color = effect2
 
 
 
-
-# plot (conditional_effects(PLFAtot_PCA_06New, effects = "Dim.1",  ndraws = 10000, 
-#                           spaghetti = F,  prob = 0.9), points = T)
-# 
 
 # Appendix S2: Figure S8 pp check ####
 pp_check (PLFAtot_PCA_06New, ndraws = 100) +

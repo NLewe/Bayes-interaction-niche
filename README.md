@@ -1,4 +1,5 @@
-# Plant interaction traits determine the biomass of arbuscular mycorrhizal fungi and bacteria in soil  R-code 
+# Plant interaction traits determine the biomass of arbuscular mycorrhizal fungi and bacteria in soil - R-code 
+
 written by: Natascha Lewe
 
 

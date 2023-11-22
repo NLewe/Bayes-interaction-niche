@@ -523,8 +523,14 @@ ggplot (plot_2$`Dim.1:DW_roots`, aes (x = Dim.1, y = estimate__, color = effect2
   geom_smooth  (method = lm) + 
   geom_ribbon (aes (ymin = lower__, ymax = upper__, fill = effect2__ ), linewidth = 0, alpha = 0.5) +
   theme_bw ( ) + 
+  theme (axis.title = element_text(size =16, color = "black" ), 
+         axis.text = element_text(size = 14, color = "black"),
+         legend.position = "right", 
+         legend.text = element_text(size = 14, color = "black"), 
+         legend.title = element_text(size = 16, color = "black"), 
+         panel.grid = element_blank()) +
   facet_wrap(~cond__, labeller = labeller (cond__ = label_DWA)) +
-  theme (axis.title = element_text(size =12), strip.text.x = element_text(size = 11),
+  theme ( strip.text.x = element_text(size = 14),
          legend.position = "right") +
   xlab ( "Principal component 1") +
   ylab(expression("Bacterial PLFA in nmol/g soil")) +

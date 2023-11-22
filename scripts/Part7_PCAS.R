@@ -3,9 +3,11 @@
 ## packages ####
 library (tidyverse)
 library (ggradar)
-
+library (ggrepel)
 library (ggpubr)
 library (scales)
+library (factoextra)
+library (FactoMineR)
 
 # PCA E2 per sample  (supplementary material) #####
 
@@ -45,14 +47,14 @@ plotPca_dim1_2  <-
   mutate (PlantFamily = str_replace(PlantFamily, "Soil","Soil control")) %>% 
   ggplot (aes (x = Dim.1, y = Dim.2, color = PlantSpeciesfull)) + 
   geom_point (size =3) +
-  geom_hline(yintercept = 0, lty = 2, color = "grey", alpha = 0.9) + 
-  geom_vline(xintercept = 0, lty = 2, color = "grey", alpha = 0.9) + 
+  geom_hline(yintercept = 0, lty = 2, color = "black", alpha = 0.9) + 
+  geom_vline(xintercept = 0, lty = 2, color = "black", alpha = 0.9) + 
   #stat_ellipse(aes (x= Dim.1, y = Dim.2, color = group))  +   # thisis 95%confidence
   geom_segment(data = PCA_arrows_metrics_sample, aes (x=0, xend= D1end*4.5, y = 0, yend = D2end*4.5), 
                arrow = arrow(length = unit(0.3, "picas")), color = "blue", inherit.aes = F)  +
   geom_text_repel ( data = PCA_arrows_metrics_sample, aes (x  = D1end*4.5, y = D2end*4.5, label = metric), 
                     color = "blue", inherit.aes = F , force = 0.6) + 
-  theme_minimal() + 
+  theme_classic() + 
   xlab(label = "PC1 (52.6 %)") +
   ylab ("PC3 (22.0 %)") + 
   guides (color= guide_legend( "Plant species")) +
@@ -60,7 +62,8 @@ plotPca_dim1_2  <-
 
 # Plot contributions to PCs ##
 plot1 <- fviz_contrib(PCA_all_metrics_E2_sample, choice = "var", axes = 1, 
-                      font.main = c(size =12 ), title= "Contribution of variables to PC1")
+                      font.main = c(size =12 ), title= "Contribution of variables to PC1") +
+  theme_classic()
 plot2 <- fviz_contrib(PCA_all_metrics_E2_sample, choice = "var", axes = 2, 
                       font.main = c(size =12 ), title= "Contribution of variables to PC2")
 plot3 <- fviz_contrib(PCA_all_metrics_E2_sample, choice = "var", axes = 3, 
@@ -74,13 +77,13 @@ plotPca_dim2_3  <-
   mutate (PlantFamily = str_replace(PlantFamily, "Soil","Soil control")) %>% 
   ggplot (aes (x = Dim.2, y = Dim.3, color = PlantSpeciesfull)) + 
   geom_point (size =3) +
-  geom_hline(yintercept = 0, lty = 2, color = "grey", alpha = 0.9) + 
-  geom_vline(xintercept = 0, lty = 2, color = "grey", alpha = 0.9) + 
+  geom_hline(yintercept = 0, lty = 2, color = "black", alpha = 0.9) + 
+  geom_vline(xintercept = 0, lty = 2, color = "black", alpha = 0.9) + 
   geom_segment(data = PCA_arrows_metrics_sample, aes (x=0, xend= D2end*4.5, y = 0, yend = D3end*4.5), 
                arrow = arrow(length = unit(0.3, "picas")), color = "blue", inherit.aes = F)  +
   geom_text_repel ( data = PCA_arrows_metrics_sample, aes (x  = D2end*4.5, y = D3end*4.5, label = metric), 
                     color = "blue", inherit.aes = F , force = 0.6) + 
-  theme_minimal() + 
+  theme_classic() + 
   xlab(label = "PC2 (22.0 %)") +
   ylab ("PC3 (12.2 %)") + 
   guides (color= guide_legend( "Plant species")) +

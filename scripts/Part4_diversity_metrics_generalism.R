@@ -40,24 +40,7 @@ ASV_table_Glo  <-
   as_tibble (rownames = "ASV_ID") %>%   
   left_join ((tax_table (ps_E1) %>% data.frame() %>%  as_tibble (rownames = "ASV_ID")), by = "ASV_ID")
 
-
-# means ##
-#mean ASVs per sample####
-
-meannumberASVspersample   <-
-  ASV_table_Glo  %>% 
-  select(-c(Kingdom, Phylum, Class, Family, Order, Genus, Species))  %>% 
-  gather (!ASV_ID, key=sampleID, value = ASV_counts)  %>%
-  left_join(metaM0, by="sampleID") %>% 
-  filter (ASV_counts!=0) %>% 
-  group_by (sampleID) %>%  
-  tally(name="numberASVs") %>% 
-  left_join(metaM0, by="sampleID") %>% 
-  group_by (PlaSpe) %>% 
-  mutate(meannumberASVs=mean(numberASVs)) %>% 
-  arrange(meannumberASVs) 
-
-#mean ASVs per plant species####
+## mean Richness per plant species####
 meannumberASVsper_species   <-
   ASV_table_Glo  %>% 
   select(-c(Kingdom, Phylum, Class, Family, Order, Genus, Species))  %>% 
@@ -74,7 +57,7 @@ meannumberASVsper_species   <-
   group_by (PlantSpeciesfull, PlantFamily, PlantType)  %>% 
   summarize (mean_n_ASV_per_species  = mean(meannumberASVs))
 
-# total ASVs in dataset####
+# total ASVs in dataset###
 totalASVs  <-ASV_table_Glo %>%  tally()
 
 ##y- diversity = unique ASVs per plant species ####
@@ -98,8 +81,8 @@ adiv_richness  <- estimate_richness(ps_E1, measures = c("Observed",  "Shannon"))
 
 
 
-## CU - compositional units  ####
-#repl after selecting Glo ###
+## beta (CU) - compositional units  ####
+#Number of replicates remaining after filtering of sequences gotr Glomeromycotoina is calculated ###
 replicates_samples_after_Glo  <-
   ASV_table_Glo  %>% 
   select(-c(Kingdom, Phylum, Class, Family, Order, Genus, Species))  %>% 
@@ -111,7 +94,9 @@ replicates_samples_after_Glo  <-
   left_join(metaM0, by="sampleID") %>%  group_by(PlantSpeciesfull) %>%  tally() %>% 
   dplyr:: rename ("repl"= "n")
 
-comp_units   <- meannumberASVsper_species  %>% 
+## beta (CU) ##
+comp_units   <- 
+  meannumberASVsper_species  %>% 
   left_join(uniqueASVsperPlaSpe)  %>% 
   left_join (replicates_samples_after_Glo) %>% 
   group_by (PlantSpeciesfull) %>% 
@@ -120,23 +105,18 @@ comp_units   <- meannumberASVsper_species  %>%
   mutate ("1-CU" = 1 - CUnits) 
 
 
-#ß core ####
+##ß core ####
 
-# taxa core
-#ps_Glo_core  <- taxa_core (ps_E1, treatment = "PlaSpe", frequency =0.1)
+data_E1_melted <- melt_phyloseq(ps_E1) # make phyloseq to data table
 
-#Test step by step#
-#
-
-data_E1_melted <- melt_phyloseq(ps_E1)
-
+### Test different cutoffs for beta (core) for Supplementary material ####
 ASVs_in_1_samples <-
   data_E1_melted %>% 
   as_tibble () %>% 
   filter (Abundance >0) %>% 
   group_by (PlantSpeciesfull, OTU) %>% 
   count () %>% 
-  left_join (replicates_samples_after_Glo) %>% 
+  left_join (replicates_samples_after_Glo) %>% # add information on number of replicates
   filter (n/repl>=0.2) %>%  ## Change here 
   select (PlantSpeciesfull, n) %>% 
   group_by (PlantSpeciesfull) %>% 
@@ -217,28 +197,13 @@ beta_core_E1_5 <-
   left_join (ASVs_in_5_samples) %>% 
   mutate (beta_core5 = round (1-(n/uniqueASVsperPlSpe),2))
 
+### Table for supplementary material ####
 beta_core_E1_1 %>% 
   left_join(beta_core_E1_2 %>%  select ( PlantSpeciesfull, beta_core2)) %>% 
   left_join(beta_core_E1_3 %>%  select ( PlantSpeciesfull, beta_core3 )) %>% 
   left_join(beta_core_E1_4 %>%  select ( PlantSpeciesfull, beta_core4)) %>% 
   left_join(beta_core_E1_5 %>%  select ( PlantSpeciesfull, beta_core5)) %>% 
   write_csv("results/beta_core_all_cutoffs.csv")
-
-#ps_Glo_core  <- phylosmith::taxa_filter (ps_E2, treatment = "PlaSpe", frequency =0.6, subset= "HolLan")
-
-#ps_core_PlaSpe  <- merge_samples(ps_Glo_core, group = "PlantSpeciesfull", fun = sum)
-
-#calculate beta diversity as percentage 
-# cores  <- 
-#   as.data.frame (otu_table (ps_core_PlaSpe )) %>%   as_tibble(rownames = "PlantSpeciesfull") %>% 
-#   pivot_longer (!PlantSpeciesfull, names_to="ASV_ID", values_to  = "ASV_counts")  %>%  
-#   group_by (PlantSpeciesfull) %>%  
-#   dplyr::filter (ASV_counts != "0")  %>% 
-#   dplyr::tally(name="core") %>% 
-#   left_join(uniqueASVsperPlaSpe)  %>% 
-#   mutate (perc_core = 100 -(100* core/uniqueASVsperPlSpe)) %>% 
-#   mutate (perc_core = round (perc_core,1) ) %>% 
-#   select (PlantSpeciesfull, perc_core)
 
 
 ## MPD ####
@@ -247,12 +212,13 @@ comm_df_Glo  <- data.frame (t(otu_table (ps_E1))) # vegan expects samples as row
 
 ses.MPD_Glo  <-  as_tibble (ses.mpd (comm_df_Glo, dist_Glo, null.model = "independentswap" ), rownames = "sampleID")
 
+## phylogenetic γ-diversity ####
 #agglomerate to Plant Species
 ps_Glo_perPlaSpe  <- merge_samples(ps_E1, group = "PlantSpeciesfull")
 
-#make df for Glo_PlaSpe data (empty samples samples pruned )
+# make df for data 
 comm_df_Glo_PlaSpe  <- data.frame (otu_table (ps_Glo_perPlaSpe)) # vegan expects samples as rows and ASVs species as columns
-
+# calculate MPD per plant species (gamma-diversity)
 ses.MPD_Glo_PlaSpe  <-  as_tibble (ses.mpd (comm_df_Glo_PlaSpe, dist_Glo, null.model = "independentswap" ), rownames = "sampleID")# tree is the same as before
 
 # Unifrac #####
@@ -338,15 +304,14 @@ write_csv (All_metrics_E1_samples, "results/20240501_All_metrics_E1_sample.csv")
 
 # E2 - all metrics calculation ######
 
-ps_E2 
-## richness,  shannon ####
+## Richness S,  Shannon's H####
 adiv_richness_M1  <- 
   estimate_richness(ps_E2, measures = c("Observed", "Shannon")) %>% 
   as_tibble (rownames = "sampleID") %>% 
   left_join (meta_M1 %>%  select (sampleID, PlaSpe, PlantSpeciesfull, PlantFamily), by = "sampleID")  
 
 
-## richness per species -average
+## Mean richness per plant  species ####
 meannumberASVsper_species_M1  <-
   adiv_richness_M1 %>% 
   group_by (PlantSpeciesfull) %>% 
@@ -521,7 +486,7 @@ comm_df_Glo_M1  <- data.frame (t(otu_table (ps_E2)) )# vegan expects samples as 
 
 ses.MPD_Glo_M1  <-  as_tibble (ses.mpd (comm_df_Glo_M1, dist_Glo_M1, null.model = "independentswap" ), rownames = "sampleID")
 
-## phylogenetic y-diversity ####
+## phylogenetic γ-diversity ####
 
 #agglomerate to Plant Species to calculate phylogenetic y-diversity #
 ps_Glo_perPlaSpe_M1  <- merge_samples(ps_E2, group = "PlantSpeciesfull")
@@ -596,12 +561,12 @@ saveRDS(All_Metrics_E2_sample, "results/20240501_All_metrics_E2_sample.rds")
 
 ### Tree for the plant species using two genes: matK and trnL #####
 
-# sequences from NCBI
-# jalview alignment using MAFFT
-# concat with copy paste 
-# NJ tree in Jalview 
+# sequences were sourced from NCBI database
+# alignment using MAFFT was applied with software JalView
+# genes were concatenated
+# NJ tree was build in JalView 
 
-# This is how the covariance structure was calculated: '
+# This is how the covariance structure was calculated:
 library (phangorn)
 ## Build tree ####
 dnaTRNL<-read.dna("data/Exp2Fasta/matK genes/concat_align.fa",format="fasta") ## these are the aligned sequences
@@ -610,13 +575,13 @@ dnaTRNL
 labels(dnaTRNL) #check, change
 rownames(dnaTRNL)<-c("AchMil" ,"CicInt","PlaLan", "HolLan" ,"PoaCit", "BroWil","SchAru", "AgrCap") #### YOU CAN NAME YOUR PLANTS HERE, i checked those names manually
 
-## Build  tree
+## Build  tree from plant gene sequences ###
 # I used JalView (software) to generate the tree and the pairwise alignment
 tree_jalView<-read.tree("data/Exp2Fasta/matK genes/concat_tree_mafft")
 tree_jalView$tip.label # check
 plot(tree_jalView)
 # 
-# # rename 
+# # rename tree tips with names of plant species (metadata column: PlaSpe)
 tree_jalView$tip.label <- c("PlaLan","CicInt","AchMil", "BroWil","PoaCit","SchAru", "AgrCap", "HolLan"  ) # manual chec of names 
 
 ## optimise tree using maximum likelihood
@@ -649,14 +614,13 @@ plot(treeML)
 
 # get variance structure for model ###
 A <- ape::vcv.phylo(treeML) 
-saveRDS (A, "data/covariance_str_tree_concat_plants.rds") #covaraince structure based on trnl tree , for models (i.e. glmm)
+saveRDS (A, "data/covariance_str_tree_concat_plants.rds") 
 
 
 
 
 
-
-## Calculations for the tables in the supporting informations ####
+## Calculations for the tables in the Supplementary Material ####
 
 
 ## Mean phylogenetic distance for experiment E2 ##
@@ -667,6 +631,6 @@ ses.MPD_Glo_M1 %>%
   select (-runs) %>% write_excel_csv("results/mpd_E2.csv")
 
 
-All_Metrics_E2_sample %>% ggplot (aes (x= PlantSpeciesfull, y = `Richness S`))  + geom_boxplot () +coord_flip()
-
-All_Metrics_E2_sample %>% ggplot (aes (x= PlantSpeciesfull, y = MPD))  + geom_boxplot () +coord_flip()
+# All_Metrics_E2_sample %>% ggplot (aes (x= PlantSpeciesfull, y = `Richness S`))  + geom_boxplot () +coord_flip()
+# 
+# All_Metrics_E2_sample %>% ggplot (aes (x= PlantSpeciesfull, y = MPD))  + geom_boxplot () +coord_flip()

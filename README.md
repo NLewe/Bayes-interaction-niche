@@ -3,14 +3,13 @@
 written by: Natascha Lewe
 
 
-NOTE: THIS IS R CODE FOR A MANUSCRIPT IN THE FIRST SUBMISSION STAGE TO THE JOURNAL ECOLOGY. 
+NOTE: THIS IS R CODE FOR A MANUSCRIPT IN THE RE-SUBMISSION STAGE TO THE JOURNAL ECOLOGY. 
 The recommended start point to use the data is from Part4, i.e. downloading the phyloseq files directly. 
 
 
 This repository contains the meta data, the R scripts and intermediate results/data files for the above submission of the manuscript:
 
 Lewe, Natascha; Keyzers, Robert A.; Tylianakis, Jason M.; Deslippe, Julie R. (2024). Plant interaction traits determine the biomass of arbuscular mycorrhizal fungi and bacteria in soil. Ecology
-
 
 
 
@@ -105,18 +104,21 @@ Figure 1 of the publication is calculated as well as the Procrustes analysis com
 
 
 
-## Part 7 ####
-Principal component analysis (PCA)
+## Part 7 Principal component analysis (PCA) ####
+based on the per sample values for the diversity metrics, principal components are calculated and extracted for use in bayesian models.
 
 #### Files needed
--output from parts 4 and 6
+- Part7_PCA.R
+- output from parts 4
 
 
 ## Part 8 Bayesian model and figure ###
-The effect of the interaction generalism on the soil AMF biomass is explored using Bayesian models. A plot showing the conditional effect of the plant biomass is calculated.
+The effect of the interaction generalism on the soil AMF biomass is explored using Bayesian models. 
+A plot showing the conditional effect of the plant biomass is calculated.
 
 #### Files needed
-- output from parts 5 and 6
+- Part8_AMFbiomass_Bayes.R
+- outputs from parts 5 and 7
 
 
 ## Part 9 ####
@@ -125,15 +127,26 @@ A plot describing the best resulting model is shown.
 Note that not all possible variations of the models are shown.
 
 #### Files needed
+- Part9_bacterial_biomass_Bayes.R
 - output from parts 5 and 6
 
-## Part 10 Appendix2###
--R code for Figures from the Appendix and the supplementary results 
 
+## Part 10 ####
+- R code for tables etc. of the Appendix S2.
 
 #### Files needed 
-ps_E1.rds
-ps_E2.rds
-track_reads_E1.csv
-ps_AllASVs_E1.rds
-iNext_ALL_E1_8_sp_PlaSpe_richness.rds
+- Part10_AppendixS2.R
+- ps_E1.rds
+- ps_E2.rds
+- track_reads_E1.csv
+- ps_AllASVs_E1.rds
+- iNext_ALL_E1_8_sp_PlaSpe_richness.rds
+
+
+## Part 11 Bayesian models using diversity metrics - for Appendix S2###
+
+#### Files needed
+- output from parts 5 and 7
+- Part11_Biomass_diversity_Bayes.R
+
+

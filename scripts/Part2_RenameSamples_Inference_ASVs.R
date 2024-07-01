@@ -12,7 +12,7 @@ getwd()
 
 
 # eg. C:/Users/RProject_InteractionNiches"
-path = "path/to/directory/Lib_primer_removed"  # e.g. C:/Users/RProject_InteractionNiches/Lib_primer_removed
+path = "your/path/to/directory/Lib_primer_removed"  # e.g. C:/Users/RProject_InteractionNiches/Lib_primer_removed
 #have a look at the file names
 list.files(path)  ## add the appropriate path to the directory containing the resulting files from the last step (see script Part1_primer removal)
 
@@ -108,7 +108,7 @@ library(phyloseq); packageVersion("phyloseq")
 ###generate name list####
 #generate matched lists of the forward and reverse read files, 
 #as well as parsing out the sample name. Here we assume forward and reverse 
-#read files are in the format SAMPLENAME.R1.fastq.gz and SAMPLENAME.R2.fastq.gz
+#read files are in the format SAMPLENAME.1.fastq.gz and SAMPLENAME.2.fastq.gz
 fnFs <- sort(list.files(path, pattern = ".1.fastq.gz", full.names = TRUE))
 fnRs <- sort(list.files(path, pattern = ".2.fastq.gz", full.names = TRUE))
 # Extract sample names, assuming filenames have format: SAMPLENAME.XXX.fastq
@@ -249,9 +249,6 @@ dim(seqtab)
 # For later use, we can save this file in R.
 saveRDS(seqtab, "your/workingdirectory/seqtab_Lib.rds") # CHANGE ME to where you want sequence table saved
 
-
-
-##Libraries####
 
 
 meta <- read_xlsx("data/meta_table.xlsx")

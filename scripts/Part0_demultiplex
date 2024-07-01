@@ -41,7 +41,13 @@ The barcodes are names F1 and F2 for the two barcodes used in the forward primer
  
 # command for demultiplexing:
 
-cutadapt -e 0 --no-indels -g file:XFWDbarcodes.fasta -G file:XREVbarcodes.fasta -o Lib01/{name1}-{name2}.1.fastq.gz -p Lib01/{name1}-{name2}.2.fastq.gz M1Lib01_1.fastq.gz M1Lib1_2.fastq.gz --minimum-length 1 --overlap 6 >> Lib01_summ_cutadapt.out
+cutadapt -e 0 --no-indels 
+-g file:XFWDbarcodes.fasta 
+-G file:XREVbarcodes.fasta 
+-o Lib01/{name1}-{name2}.1.fastq.gz 
+-p Lib01/{name1}-{name2}.2.fastq.gz 
+M1Lib01_1.fastq.gz M1Lib1_2.fastq.gz 
+--minimum-length 1 --overlap 6 >> Lib01_summ_cutadapt.out
 
 # The two fasta files contain the nucleotide sequences used to barcode the forward and reverse primers.
  
@@ -59,7 +65,8 @@ cutadapt -e 0 --no-indels -g file:XFWDbarcodes.fasta -G file:XREVbarcodes.fasta 
 #the unknown-unknown file is rerun the other way around in the cutadapt script 
 
 # command
-cutadapt -e 0 --no-indels -g file:XFWDbarcodes.fasta -G file:XREVbarcodes.fasta -o Lib01/B{name1}-{name2}.1.fastq.gz -p Lib01/B{name1}-{name2}.2.fastq.gz Lib01/unknown-unknown.2.fastq.gz Lib01/unknown-unknown.1.fastq.gz --minimum-length 1 --overlap 6 >> BLib01_summ_cutadapt.out
+cutadapt -e 0 --no-indels -g file:XFWDbarcodes.fasta -G file:XREVbarcodes.fasta -o 
+Lib01/B{name1}-{name2}.1.fastq.gz -p Lib01/B{name1}-{name2}.2.fastq.gz Lib01/unknown-unknown.2.fastq.gz Lib01/unknown-unknown.1.fastq.gz --minimum-length 1 --overlap 6 >> BLib01_summ_cutadapt.out
 
 #now we have 2 files for the R1 and 2 files for the R2 reads
 #these are merged (concatenated) in bash - see Step 3
@@ -94,7 +101,7 @@ BioProject ID:      PRJNA997080
 
 
 
-The raw multiplexed files and the needed metainformation of the libraries can be found at:  https://osf.io/jcynz/
+The raw multiplexed files and the needed metainformation of the libraries can also be found at:  https://osf.io/jcynz/
 Note that this publication used part of the data from a larger project.
 The files needed here are from Libraries Lib01, Lib02 and some files are found in Lib19 (see accompanying meta data for details).
 

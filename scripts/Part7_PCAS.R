@@ -1,6 +1,6 @@
-# part 7 - PCAs #####
+# Part 7 - Principal component analysis PCA #####
 
-## packages ####
+# Packages ####
 library (tidyverse)
 library (ggradar)
 library (ggrepel)
@@ -9,30 +9,37 @@ library (scales)
 library (factoextra)
 library (FactoMineR)
 
-# PCA E2 per sample  (supplementary material) #####
-
+# PCA for experiment E2 per sample  (supplementary material) #####
+# The principal components (PC) are calculated for subsequent use as variables in Bayesian modelling.
 # All_Metrics_E2_sample <- readRDS ("data/All_metrics_E2_sample.rds")
 All_Metrics_E2_sample_df <- 
   All_Metrics_E2_sample %>% 
   relocate(where(is.numeric), .after = where(is.character)) %>%  data.frame(row.names = "sampleID")
 
 ## calculation of PCA ##
-PCA_all_metrics_E2_sample <- PCA(All_Metrics_E2_sample_df, quali.sup = c(1:4),   scale.unit = T, graph = F)
+PCA_all_metrics_E2_sample <- PCA(All_Metrics_E2_sample_df, quali.sup = c(1:4 ),   scale.unit = T, graph = F)
 
-#PCA plot Exp 2 -  for each sample #
+#PCA plot for experiment E2 -  for each sample is prepared#
+# The values to show the correlation of the diversity metrics to the PC axes
+#  and each other are extracted from the above PCA result.
 PCA_arrows_metrics_sample<-
   PCA_all_metrics_E2_sample$var$coord %>%  
   as_tibble (rownames = "metric") %>% 
   dplyr::rename("D1end" = "Dim.1", "D2end"= "Dim.2", "D3end" = "Dim.3")
 
-PCA_metric_data_sample   <- PCA_all_metrics_E2_sample$ind$coord  %>%  as_tibble(rownames = "sampleID") %>% 
+# The values of the coordinates for each plant replicate are extracted and unified 
+# into one tibble with the coordinates of the diversity metrics.
+PCA_metric_data_sample   <- 
+  PCA_all_metrics_E2_sample$ind$coord  %>%  
+  as_tibble(rownames = "sampleID") %>% 
   left_join(meta_M1 %>%  select (sampleID, PlantSpeciesfull, PlantFamily) ) 
 
-PCA_metric_data_sample %>%  write_csv ("results/PCA_metric_PCs.csv")
+PCA_metric_data_sample %>%  write_csv ("results/20240501_PCA_metric_PCs.csv")
 
-saveRDS(PCA_metric_data_sample, "results/PCA_metric_data_sample.rds")
-## for Appendix tbale 
+saveRDS(PCA_metric_data_sample, "results/20240501_PCA_metric_data_sample.rds")
+## Table for Appendix 2 (supplementary material)  
 
+#The percentage of explained variance per axis are calculated.
 PCA_eig_m_Dim1 <- round (PCA_all_metrics_E2_sample$eig[1,2],1)
 PCA_eig_m_Dim1
 PCA_eig_m_Dim2 <- round (PCA_all_metrics_E2_sample$eig[2,2],1)
@@ -40,8 +47,10 @@ PCA_eig_m_Dim2
 PCA_eig_m_Dim3 <- round (PCA_all_metrics_E2_sample$eig[3,2],1)
 PCA_eig_m_Dim3
 
+PCA_eig_m_Dim1 + PCA_eig_m_Dim2 + PCA_eig_m_Dim3
 
-#Plot PCA E2 per sample - dimensions 1 and 2 #
+
+#Plot PCA for experiment E2 per sample - dimensions 1 and 2 #
 plotPca_dim1_2  <- 
   PCA_metric_data_sample %>%  
   mutate (PlantFamily = str_replace(PlantFamily, "Soil","Soil control")) %>% 
@@ -55,15 +64,14 @@ plotPca_dim1_2  <-
   geom_text_repel ( data = PCA_arrows_metrics_sample, aes (x  = D1end*4.5, y = D2end*4.5, label = metric), 
                     color = "blue", inherit.aes = F , force = 0.6) + 
   theme_classic() + 
-  xlab(label = "PC1 (52.6 %)") +
-  ylab ("PC3 (22.0 %)") + 
+  xlab(label = "PC1 (46.5 %)") +
+  ylab ("PC3 (30.0 %)") + 
   guides (color= guide_legend( "Plant species")) +
   theme (legend.position = "bottom") 
 
 # Plot contributions to PCs ##
 plot1 <- fviz_contrib(PCA_all_metrics_E2_sample, choice = "var", axes = 1, 
-                      font.main = c(size =12 ), title= "Contribution of variables to PC1") +
-  theme_classic()
+                      font.main = c(size =12 ), title= "Contribution of variables to PC1") 
 plot2 <- fviz_contrib(PCA_all_metrics_E2_sample, choice = "var", axes = 2, 
                       font.main = c(size =12 ), title= "Contribution of variables to PC2")
 plot3 <- fviz_contrib(PCA_all_metrics_E2_sample, choice = "var", axes = 3, 
@@ -71,7 +79,7 @@ plot3 <- fviz_contrib(PCA_all_metrics_E2_sample, choice = "var", axes = 3,
 
 
 
-# Plot PCA E2 per sample - dimensions 2 and 3 ##
+# Plot PCAfor experiment E2 per sample - dimensions 2 and 3 ##
 plotPca_dim2_3  <- 
   PCA_metric_data_sample %>%  
   mutate (PlantFamily = str_replace(PlantFamily, "Soil","Soil control")) %>% 
@@ -84,12 +92,12 @@ plotPca_dim2_3  <-
   geom_text_repel ( data = PCA_arrows_metrics_sample, aes (x  = D2end*4.5, y = D3end*4.5, label = metric), 
                     color = "blue", inherit.aes = F , force = 0.6) + 
   theme_classic() + 
-  xlab(label = "PC2 (22.0 %)") +
-  ylab ("PC3 (12.2 %)") + 
+  xlab(label = "PC2 (30.0 %)") +
+  ylab ("PC3 (14.0 %)") + 
   guides (color= guide_legend( "Plant species")) +
   theme (legend.position = "bottom") 
 
-# Full plot 
+# Full plot for experiment E2, per plant species replicate (sample)
 ggarrange (ggarrange (plotPca_dim1_2,plotPca_dim2_3, nrow = 1, ncol = 2, labels = c ("A", "B"), common.legend = T),
            ggarrange (plot1, plot2, plot3, nrow = 1, ncol= 3, labels= c( "C", "D", "E")), 
            nrow=2, ncol=1, heights  =  c(2, 1)) 
@@ -101,9 +109,8 @@ ggarrange (ggarrange (plotPca_dim1_2,plotPca_dim2_3, nrow = 1, ncol = 2, labels 
 
 ## additional plots PCA for supplementary ##
 
-# PCA E1 per plant species ####
+# PCA for experiment E1 per plant species ####
 # 
-
 PCA_all_metrics_E1 <- PCA(All_metrics_E1_df, quali.sup = c(2,9),   scale.unit = T, graph = F)
 
 # get data for plot ###
@@ -121,7 +128,7 @@ PCA_eig_m_Dim2 <- round (PCA_all_metrics_E1$eig[2,2],1)
 PCA_eig_m_Dim2
 
 
-#Plot  PCA for E1 - plant species (in supplementary) ###
+#PCA plot for experiment E1 - per plant species ###
 
 plotPCA_E1  <- 
   PCA_metric_data_E1 %>%  
@@ -160,9 +167,9 @@ ggarrange (plotPCA_E1,
 
 
 
-# PCA E2 per plant species ####
+# PCA for experiment E2 per plant species ####
 
-PCA_all_metrics_E2 <- PCA(All_metrics_E2_df, quali.sup = c(8,9,10),   scale.unit = T, graph = F)
+PCA_all_metrics_E2 <- PCA(All_metrics_E2_df, quali.sup = c(9,10,11),   scale.unit = T, graph = F)
 
 # data for the PCA plot ###
 PCA_arrows_metrics_E2<-
@@ -215,7 +222,7 @@ ggarrange (plotPCA_E2,
            nrow=1, ncol=2, widths =  c(2, 1), labels= "A") 
 
 
-# PCA E1 per sample  (supplementary material) #####
+# PCA for experiment E1 per sample  (supplementary material) #####
 
 # All_Metrics_E1_sample <- readRDS ("data/All_metrics_E1_sample.rds")
 All_Metrics_E1_sample_df <- 
@@ -236,6 +243,7 @@ PCA_metric_data_sample   <- PCA_all_metrics_E1_sample$ind$coord  %>%  as_tibble(
 
 saveRDS(PCA_metric_data_sample, "results/PCA_metric_data_sample.rds")
 
+# Percentage of explained variance per principal component #
 PCA_eig_m_Dim1 <- round (PCA_all_metrics_E1_sample$eig[1,2],1)
 PCA_eig_m_Dim1
 PCA_eig_m_Dim2 <- round (PCA_all_metrics_E1_sample$eig[2,2],1)
@@ -244,7 +252,7 @@ PCA_eig_m_Dim3 <- round (PCA_all_metrics_E1_sample$eig[3,2],1)
 PCA_eig_m_Dim3
 
 
-#Plot PCA E1 per sample - dimensions 1 and 2 #
+# PCA plot for experiment E1 per sample - axes 1 and 2 #
 plotPca_dim1_2  <- 
   PCA_metric_data_sample %>%  
   mutate (PlantFamily = str_replace(PlantFamily, "Soil","Soil control")) %>% 
@@ -262,7 +270,7 @@ plotPca_dim1_2  <-
   guides (color= guide_legend( "Plant species")) +
   theme (legend.position = "bottom") 
 
-# Plot contributions to PCs ##
+# Plot of the contributions to the first three principal components ##
 plot1 <- fviz_contrib(PCA_all_metrics_E1_sample, choice = "var", axes = 1, 
                       font.main = c(size =12 ), title= "Contribution of variables to PC1")
 plot2 <- fviz_contrib(PCA_all_metrics_E1_sample, choice = "var", axes = 2, 
@@ -272,7 +280,7 @@ plot3 <- fviz_contrib(PCA_all_metrics_E1_sample, choice = "var", axes = 3,
 
 
 
-# Plot PCA E1 per sample - dimensions 2 and 3 ##
+# PCA plot for experiment E1 per sample - axes 2 and 3 ##
 plotPca_dim2_3  <- 
   PCA_metric_data_sample %>%  
   mutate (PlantFamily = str_replace(PlantFamily, "Soil","Soil control")) %>% 
@@ -290,7 +298,7 @@ plotPca_dim2_3  <-
   guides (color= guide_legend( "Plant species")) +
   theme (legend.position = "bottom") 
 
-# Full plot 
+# Full plot for experiment E1 per sample #
 ggarrange (ggarrange (plotPca_dim1_2,plotPca_dim2_3, nrow = 1, ncol = 2, labels = c ("A", "B"), common.legend = T),
            ggarrange (plot1, plot2, plot3, nrow = 1, ncol= 3, labels= c( "C", "D", "E")), 
            nrow=2, ncol=1, heights  =  c(2, 1)) 

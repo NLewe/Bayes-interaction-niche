@@ -4,6 +4,8 @@ library (tidyverse)
 library (iNEXT)
 library (phyloseq)
 library (ggpubr)
+
+
 #Appendix S2 ##
 ps_ALL_E1_8Sp  <-  readRDS("data/ps_AllASVs_E1.rds")  
 
@@ -12,7 +14,7 @@ ps_ALL_E1_8Sp  <-  readRDS("data/ps_AllASVs_E1.rds")
 #Section S1 #
 # Figure S1 rarefaction curves for E1 ####
 
-# `rarefaction-ALL, fig.cap = "A) Rarefaction (solid line segments) and extrapolation (dotted line segments) 
+# A) Rarefaction (solid line segments) and extrapolation (dotted line segments) 
 #sampling curves of fungal ASV richness for each plant species and soil. B) Sample completeness curves by sequence reads. c) Sample coverage curves. Shaded areas in each plot show the 95% confidence interval of the extrapolation. ", fig.height=8, fig.width=12, dpi = 300 }
 #agglomerate to Plant Species
 ps_ALL_E1_8Sp_perPlaSpe  <- merge_samples(ps_ALL_E1_8Sp, group = "PlantSpeciesfull")
@@ -81,13 +83,13 @@ ps_roots_M1_allASVs_perPlaSpe  <- merge_samples(ps_roots_allASVs, group = "Plant
 
 comm_df_M1_PlaSpe  <- data.frame (otu_table (ps_roots_M1_allASVs_perPlaSpe)) 
 
-#rarefaction in iNEXT ##
+# Rarefaction in iNEXT ##
 iNext_M1_PlaSpe_richness <- iNEXT (t (comm_df_M1_PlaSpe), 
                                    q= 0, # richness
                                    datatype =  "abundance", 
                                    endpoint = NULL, 
                                    knots = 400 )
-# plot rarefaction curve ###
+# Plot rarefaction curve ###
 p1 <- ggiNEXT(iNext_M1_PlaSpe_richness, type = 1) +
   theme_classic() + 
   scale_shape_manual(values = c(0,1, 2,3,4,5,6,7)) + 

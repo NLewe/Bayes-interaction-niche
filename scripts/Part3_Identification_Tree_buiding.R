@@ -110,7 +110,7 @@ library(msa)
 # 
 
 
-meta_table <- read_xlsx("data/meta_table.xlsx")
+meta_table <- read_xlsx("data/meta_table.xlsx") # use meta_E1 or meta_E2
 
 # A phyloseq object is build 
 # Get a sample table for the phyloseq oblect from meta table
@@ -146,13 +146,13 @@ d <- dist.alignment(ASVs_align_forseqinr, "identity")  #seqinr package
 ASV_tree  <- nj(d)  #ape package
 
 # To check if neighbor joining is the appropriate approach, run:
-# x  <- as.vector(d)
-# y  <- as.vector(as.dist(cophenetic(ASV_tree)))
-# 
-# plot (x, y, xlab = "original distance", ylab = "distance in the tree",
-#       main = "Is NJ appropriate?", pch = 20, col = transp("black", 0.1), cex = 3)
-# abline(lm((y ~ x), col = "red"))
-# cor(x, y)^2
+x  <- as.vector(d)
+y  <- as.vector(as.dist(cophenetic(ASV_tree)))
+
+plot (x, y, xlab = "original distance", ylab = "distance in the tree",
+      main = "Is NJ appropriate?", pch = 20, col = transp("black", 0.1), cex = 3)
+abline(lm((y ~ x), col = "red"))
+cor(x, y)^2
 # If points fall approximately on the red line, then the approach was appropriate.
 
 
@@ -175,7 +175,7 @@ saveRDS (ps_ALL, "data/ps_ALL.rds")
 
  ps_ALL_iter <-  phyloseq_coverage_raref(ps_ALL, iter =99) #produces 99 ps objects in list
  write_rds (ps_ALL_iter, "data/ps_ALL_iter99.rds") ## save this object 
-
+#ps_ALL_iter <- readRDS("data/ps_ALL_iter99.rds")
  
 # ps_ALL_iter <- read_rds("data/ps_ALL_iter99.rds")
  # From those 99 phyloseq objects, we need to get one mean result

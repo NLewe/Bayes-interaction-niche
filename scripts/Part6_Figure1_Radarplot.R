@@ -108,7 +108,7 @@ procr_test<-
               pivot_longer(!PlantSpeciesfull, names_to = "metric", values_to = "valuesE2")) %>%
   split(~PlantSpeciesfull) %>% 
   map (~protest(X= .$Mvalue, Y = .$valuesE2, scale = F, scores = "sites", 
-                permutations = 9999, symmetric = F))
+                permutations = 9999, symmetric = T))
 
 
 # Randomisation, i.e. (permutational) test estimate the significance of an observed statistic

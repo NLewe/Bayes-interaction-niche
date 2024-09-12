@@ -108,7 +108,7 @@ procr_test<-
               pivot_longer(!PlantSpeciesfull, names_to = "metric", values_to = "valuesE2")) %>%
   split(~PlantSpeciesfull) %>% 
   map (~protest(X= .$Mvalue, Y = .$valuesE2, scale = F, scores = "sites", 
-                permutations = 9999, symmetric = F))
+                permutations = 9999, symmetric = T))
 
 
 # Randomisation, i.e. (permutational) test estimate the significance of an observed statistic
@@ -119,6 +119,58 @@ procr_test<-
 map_dfr(procr_test, ~unlist (c(.$ss, .$svd$d, .$signif)) ) %>% 
   add_column ("procr" = c("M2", "correl", "sig")) %>%  
   mutate (across(where (is.numeric), ~round(.x, digits = 5))) %>% 
-  write.csv("results/20240501_Procrustes_test.csv")
+  write.csv("results/2024SymTRUE_Procrustes_test.csv")
 
 
+
+Test: set.seed(123)  # for reproducibility
+
+
+# Function to calculate mean Euclidean distance
+calc_mean_euclidean <- function(x, y) {
+  mean(sqrt((x - y)^2))
+}
+
+# Observed mean Euclidean distance
+observed_distance <-   All_metrics_E1 %>%  select (-Exp, -PlantFamily) %>% 
+  pivot_longer(!PlantSpeciesfull, names_to = "metric", values_to = "Mvalue") %>%  
+  left_join(All_metrics_E2 %>%  ungroup () %>% select (-Exp, -PlantFamily) %>% 
+              pivot_longer(!PlantSpeciesfull, names_to = "metric", values_to = "valuesE2")) %>%
+  split(~PlantSpeciesfull) %>% 
+  map (~calc_mean_euclidean( .$Mvalue,  .$valuesE2))
+
+calc_mean_euclidean <- function(df) {
+  mean(sqrt((df$Mvalue - df$valuesE2)^2))
+}
+
+# Function to perform randomization test on one data frame
+randomization_test <- function(df, n_permutations = 1000) {
+  observed_distance <- calc_mean_euclidean(df)
+  
+  # Perform randomization (shuffle column2 and recalculate distances)
+  permuted_distances <- replicate(n_permutations, {
+    shuffled_column2 <- sample(df$valuesE2)
+    calc_mean_euclidean(data.frame(Mvalue = df$Mvalue , valuesE2 = shuffled_column2))
+  })
+  
+  # Calculate p-value (one-sided test)
+  p_value <- mean(permuted_distances <= observed_distance)
+  
+  list(observed_distance = observed_distance, p_value = p_value)
+}
+
+data_list <- All_metrics_E1 %>%  select (-Exp, -PlantFamily) %>% 
+  pivot_longer(!PlantSpeciesfull, names_to = "metric", values_to = "Mvalue") %>%  
+  left_join(All_metrics_E2 %>%  ungroup () %>% select (-Exp, -PlantFamily) %>% 
+              pivot_longer(!PlantSpeciesfull, names_to = "metric", values_to = "valuesE2")) %>%
+  split(~PlantSpeciesfull)
+
+# Apply randomization test to each object in the list
+results <- lapply(data_list, randomization_test)
+
+# View results
+results
+
+
+#The p_value will tell you the probability that the observed mean Euclidean distance is smaller than or equal to the distances from the random shuffles. A small p-value (e.g., < 0.05) indicates that the distances between the columns are significantly 
+#smaller than expected by chance, meaning they are more similar than random.

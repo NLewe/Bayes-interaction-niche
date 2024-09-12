@@ -353,6 +353,10 @@ p1  <-
                                 "Glomus" = "#80CDC1" , "Paraglomus" = "#35978F", 
                                 "Scutellospora"= "#01665E" ), name = "AMF genus"    )  
 
+#PermANOVA to test if soils have significantly different AMF communities
+#
+  
+  
 
   # Tables for paper - supporting information #### 
   # Appendix S2: Table S3  all values metrics per plant species  ###

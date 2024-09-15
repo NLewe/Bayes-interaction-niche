@@ -4,6 +4,7 @@ library (tidyverse)
 library (iNEXT)
 library (phyloseq)
 library (ggpubr)
+library(vegan)
 
 
 #Appendix S2 ##
@@ -353,14 +354,89 @@ p1  <-
                                 "Glomus" = "#80CDC1" , "Paraglomus" = "#35978F", 
                                 "Scutellospora"= "#01665E" ), name = "AMF genus"    )  
 
-#PermANOVA to test if soils have significantly different AMF communities
+  
+# Figure for soil only 
+ASV_table_Glo_Soil  <- 
+  otu_table (ps_Soil) %>% 
+    data.frame() %>%  
+    as_tibble (rownames = "ASV_ID") %>%   
+    left_join ((tax_table (ps_Soil) %>% data.frame() %>%  as_tibble (rownames = "ASV_ID")), by = "ASV_ID") 
+
+%>% 
+left_join ((sample_data (ps_Soil) %>% data.frame() %>%  as_tibble (rownames = "ASV_ID")), by = "ASV_ID") 
+
+p1  <-  
+  ASV_table_Glo_Soil  %>%  
+  select(-c(Kingdom, Phylum, Class, Order, Species))  %>% 
+  gather (-c(ASV_ID, Genus, Family), key=sampleID, value = ASV_counts)  %>%
+  left_join ((sample_data (ps_Soil) %>% data.frame() %>%  as_tibble (rownames = "sampleID")), by = "sampleID") %>% 
+  filter (!is.na (PlaSpe)) %>% 
+  filter (ASV_counts!=0)  %>% 
+  group_by (ASV_ID, PlaSpe, Genus) %>% 
+  tally () %>%
+  group_by(Genus, PlaSpe )  %>% 
+  tally () %>% 
+  replace_na(list (Genus="unidentified"))   %>% 
+  ggplot (aes(x= PlaSpe, y= n, fill=Genus))  +
+  geom_bar(position="stack", stat ="identity")
+
+p1+ theme_light()+ 
+  coord_flip () +
+  ylab("Unique AMF ASVs per experimental soil") +
+  xlab ("soils") +
+  theme_light () +
+  theme(axis.text.y= element_text(family= "sans", face= "italic", size = 12)) +
+  theme (axis.text.x=element_text(family= "sans", size = 12))  +
+  theme (axis.title = element_text(family = "sans", size = 14 ),  
+         legend.title=element_text(size=13), 
+         legend.text=element_text(size=11, face ="italic"),
+         legend.position = "bottom",
+         strip.background = element_rect(fill = "white", colour = "grey"), 
+         strip.text = element_text(colour = "black")) +
+  scale_fill_manual(values = c( "unidentified" ="#C7EAE5", "Archaeospora"  = "#287D8EFF" , 
+                                "Acaulospora" =  "#C1A363" , "Diversispora" =  "darksalmon",
+                                "Funneliformis" = "#F6E8C3", "Cetraspora"  = "#DFC27D", 
+                                "Claroideoglomus" =  "#20A386FF", "Rhizophagus" = "darkgray",
+                                "Glomus" = "#80CDC1" , "Paraglomus" = "#35978F", 
+                                "Scutellospora"= "#01665E" ), name = "AMF genus"    )  
+  
+  
+#PermANOVA to test if soils have significantly different AMF communities #####
 #
   
+ps_SoilE1 <- subset_samples(ps_ALL, PlaSpe == "Soil")  ## Exp1
+  
+ps_SoilE2 <- subset_samples(ps_ALL_rar_E2, PlaSpe == "SoiCon")    
+  
+  
+  
+ps_Soil_combined <- merge_phyloseq(
+    phyloseq::otu_table(ps_SoilE1), phyloseq::otu_table(ps_SoilE2),
+    phyloseq::sample_data(ps_SoilE1), phyloseq::sample_data(ps_SoilE2),
+    phyloseq::tax_table(ps_SoilE1), phyloseq::tax_table(ps_SoilE2)
+  )
+ps_Soil  <-  subset_taxa(ps_Soil_combined, Phylum == "Glomeromycota")
+  
+  
+  
+# Extract the distance matrix (e.g., Bray-Curtis)
+dist_matrix <- distance(ps_Soil, method = "bray")
+  
+# Extract the sample data 
+sample_data_df <- as(sample_data(ps_Soil), "data.frame")
+  
+# Run PERMANOVA (the variable PlaSpe contains the different infomration o the different soil origin)
+permanova_result <-  adonis2(dist_matrix ~ PlaSpe, data = sample_data_df, permutations = 9999)
+  
+# View the PERMANOVA result
+print(permanova_result)
   
 
-  # Tables for paper - supporting information #### 
-  # Appendix S2: Table S3  all values metrics per plant species  ###
-  All_metrics_E1 %>%  rbind(All_metrics_E2) %>% 
+  
+
+# Tables for paper - supporting information #### 
+# Appendix S2: Table S3  all values metrics per plant species  ###
+All_metrics_E1 %>%  rbind(All_metrics_E2) %>% 
     mutate  (`Shannon's H'` = round (`Shannon's H'`,2 ), 
              `Richness S` = round ( `Richness S`,2), CU = round (`β(CU)`, 2), 
              MPD = round (MPD, 2),
@@ -369,20 +445,20 @@ p1  <-
   
   
   
-  # Appendix S2: Table S4  alpha diversity per sample  #
-  adiv_richness %>%  
+ # Appendix S2: Table S4  alpha diversity per sample  #
+adiv_richness %>%  
     left_join(metaM0 %>%  select (sampleID, PlantSpeciesfull)) %>%  
     mutate (`Shannon's H'` = round (Shannon, 3)) %>% 
     write_excel_csv("results/tableS6_alpha_div_E1.csv")
   
-  adiv_richness_M1 %>%  select (-PlaSpe, -PlantFamily) %>%  
+adiv_richness_M1 %>%  select (-PlaSpe, -PlantFamily) %>%  
     mutate (`Shannon's H'` = round (Shannon, 3)) %>% 
     write_excel_csv("results/tableS6_alpha_div_E2.csv")
   
   
 # Table S6: AMF per root and soil sample, total bacterial biomass (PLFA) , root and shoot biomass ############
   
-  dataNLrootstosoil %>% # amf soil is in µmol here
+dataNLrootstosoil %>% # amf soil is in µmol here
     mutate (AMF = AMF * 1000) %>%  # AMF is now in nmol per g now
     left_join(PLFA_Soil %>%  
                 ungroup () %>%  

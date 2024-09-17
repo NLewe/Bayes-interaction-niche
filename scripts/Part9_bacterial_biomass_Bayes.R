@@ -549,9 +549,11 @@ ggplot (plot_2$`Dim.1:DW_roots`, aes (x = Dim.1, y = estimate__, color = effect2
   xlab ( "Principal component 1") +
   ylab(expression("Bacterial PLFA in nmol/g soil")) +
   scale_color_manual(values = c ("darkslategray4", "coral2", "blueviolet"), name = "Root biomass") +
-  scale_fill_manual (values = c ("darkslategray4", "coral2", "blueviolet"), name = "Root biomass") 
+  scale_fill_manual (values = c ("darkslategray4", "coral2", "blueviolet"), name = "Root biomass")  +
+  ggtitle("Figure 3") +    # Add your plot title here
+  theme(plot.title = element_text(size = 16, face = "bold")) 
 
-ggsave ( "figures/Bact_PC.png", height = 6, width =12, dpi = 300)    
+ggsave ( "figures/Bact_PC.pdf", height = 6, width =12, dpi = 600)    
 
 
 

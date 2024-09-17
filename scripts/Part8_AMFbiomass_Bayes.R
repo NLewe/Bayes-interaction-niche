@@ -498,22 +498,22 @@ loo_compare ( m15, m13)
 # While model 5B only including RelGenSpec is the best based on loo criterion, it is calculated with large amount of divergent transitions (222)
 # The next best model is 05C RelGenSpec + DW_roots 
 
-tidy (m6, effects = c("fixed")
+tidy (m6, effects = c("fixed"))
 ### get posteriors from the model##
       
 #
       
       
-dataNL_sample %>%
-        #group_by(PlaSpe) %>%
-        #data_grid(PlaSpe = seq_range(PlaSpe, n = 51)) %>%
-        add_epred_draws(fitAMF06New) %>%
-        ggplot(aes(x = Dim.3, y = AMF, color = ordered(PlaSpe))) +
-        stat_lineribbon(aes(y = .epred)) +
-        geom_point(data = dataNL_sample) +
-        scale_fill_brewer(palette = "Greys") +
-        scale_color_brewer(palette = "Set2") #+
-        facet_wrap(~PlaSpe, scales = "free_x")
+# dataNL_sample %>%
+#         #group_by(PlaSpe) %>%
+#         #data_grid(PlaSpe = seq_range(PlaSpe, n = 51)) %>%
+#         add_epred_draws(fitAMF06New) %>%
+#         ggplot(aes(x = Dim.3, y = AMF, color = ordered(PlaSpe))) +
+#         stat_lineribbon(aes(y = .epred)) +
+#         geom_point(data = dataNL_sample) +
+#         scale_fill_brewer(palette = "Greys") +
+#         scale_color_brewer(palette = "Set2") #+
+#         facet_wrap(~PlaSpe, scales = "free_x")
       
       
 ### BEST MODEL and FIGURE ######
@@ -525,30 +525,31 @@ priorAMFNew <- get_prior (   AMF  ~  Dim.3 +  DW_roots ,
                                    family = gaussian (),
                                    data = dataNL_sample, data2 = list(A = A))
       
-      fitAMF06New <- brm(
-        AMF  ~ Dim.3 + DW_roots,
-        data = dataNL_sample,
-        family = gaussian(),
-        data2 = list(A = A),
-        chains = 8, cores = 8,
-        iter = 10000, warmup = 3000
+fitAMF06New <- brm(
+    AMF  ~ Dim.3 + DW_roots,
+    data = dataNL_sample,
+    family = gaussian(),
+    data2 = list(A = A),
+    chains = 8, cores = 8,
+    iter = 10000, warmup = 3000
       )
-      launch_shinystan(fitAMF06New)
+
+launch_shinystan(fitAMF06New)
       
-      fitAMF06New <- add_criterion(fitAMF06New, "loo")
-      pp_check (fitAMF06New, ndraws = 100)
-      loo (fitAMF06New)
-      fitAMF06New %>%  bayes_R2 ()
-      loo_compare (mpd_fit02, fitAMF06New)
+fitAMF06New <- add_criterion(fitAMF06New, "loo")
+pp_check (fitAMF06New, ndraws = 100)
+loo (fitAMF06New)
+fitAMF06New %>%  bayes_R2 ()
+loo_compare (mpd_fit02, fitAMF06New)
 
 ## plot conditional effects model  ####
       
-plot_1 <- conditional_effects(fitAMF06New, effects = "DW_roots:Dim.3",  ndraws = 5000, spaghetti = F,  prob = 0.5)
+plot_1 <- conditional_effects(fitAMF06New, effects = "Dim.3:DW_roots",  ndraws = 5000, spaghetti = F,  prob = 0.5)
       
       
 ##Prepare plot Figure 2 #####
       
-        ggplot (plot_1$`Dim.3:DW_roots`, aes (x = Dim.3, y = estimate__, color = effect2__)) +
+ggplot (plot_1$`Dim.3:DW_roots`, aes (x = Dim.3, y = estimate__, color = effect2__)) +
         geom_smooth  (method = lm) + 
         geom_ribbon (aes (ymin = lower__, ymax = upper__, fill = effect2__ ), linewidth = 0, alpha = 0.5) +
         theme_classic ( ) + 
@@ -561,9 +562,13 @@ plot_1 <- conditional_effects(fitAMF06New, effects = "DW_roots:Dim.3",  ndraws =
         xlab ( "Principal component 3") +
         ylab(expression("NLFA 16:1"*omega*"5 in nmol/g soil")) +
         scale_color_manual(values = c ("darkslategray4", "coral2", "blueviolet"), name = "Root biomass") +
-        scale_fill_manual (values = c ("darkslategray4", "coral2", "blueviolet"), name = "Root biomass") 
+        scale_fill_manual (values = c ("darkslategray4", "coral2", "blueviolet"), name = "Root biomass") +
+  ggtitle("Figure 2") +    # Add your plot title here
+  theme(plot.title = element_text(size = 16, face = "bold")) 
+
+
 # Save plot
-ggsave ( "figures/AMF_PC.png", height = 6, width =9, dpi = 300)    
+ggsave ( "figures/AMF_PC.pdf", height = 6, width =9, dpi = 600)    
       
   
   
@@ -590,7 +595,7 @@ ggsave ( "figures/AMF_PC.png", height = 6, width =9, dpi = 300)
 launch_shinystan(fitAMF06New)
       
 # Appendix S2: Figure S6
-      pp_check (fitAMF06New, ndraws = 100) +
+pp_check (fitAMF06New, ndraws = 100) +
         xlab ("AMF biomass in soil")
       
       

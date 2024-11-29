@@ -136,9 +136,9 @@ Note that not all possible variations of the models are shown.
 - Part10_AppendixS2.R
 - ps_E1.rds
 - ps_E2.rds
-- track_reads_E1.csv
-- ps_AllASVs_E1.rds
-- iNext_ALL_E1_8_sp_PlaSpe_richness.rds
+- track_reads_E1.csv (output from part 1&2)
+- ps_AllASVs_E1.rds (output from part 3)
+- iNext_ALL_E1_8_sp_PlaSpe_richness.rds (output from part 3)
 
 
 ## Part 11 Bayesian models using diversity metrics - for Appendix S2###

@@ -1,13 +1,11 @@
 # Plant interaction traits determine the biomass of arbuscular mycorrhizal fungi and bacteria in soil - R-code 
 
-written by: Natascha Lewe
+code written by: Natascha Lewe
 
-
-NOTE: THIS IS R CODE FOR A MANUSCRIPT IN THE RE-SUBMISSION STAGE TO THE JOURNAL ECOLOGY. 
 The recommended start point to use the data is from Part4, i.e. downloading the phyloseq files directly. 
 
 
-This repository contains the meta data, the R scripts and intermediate results/data files for the above submission of the manuscript:
+This repository contains the meta data, the R scripts and intermediate results/data files for the accepted manuscript:
 
 Lewe, Natascha; Keyzers, Robert A.; Tylianakis, Jason M.; Deslippe, Julie R. (2024). Plant interaction traits determine the biomass of arbuscular mycorrhizal fungi and bacteria in soil. Ecology
 

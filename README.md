@@ -16,6 +16,7 @@ We ran two glasshouse experiments, each with eight grassland/pasture plant speci
 We extracted DNA from roots and soil and sequenced the ITS2 region to identify the fungal communities. We filtered for Glomeromycotina (arbuscular mycorrhizal fungi, AMF) and we determined the biomass of the AMF and bacteria in the soil by phospholipid fatty acid analysis and neutral lipid fatty acid analysis.
 By calculating measures of AMF diversity, we were able to estimate the plants' interaction generalism with AMF. We then used a metric of generalism to examine the relationship between the interaction trait and the biomass of the soil microbial community by Bayesian analysis.
 
+Note: The plant species Lolium arundinaceus (L. arundinaceus, abbreviated also with LolAru) was renamed. The code given here instead uses Schedonorus arundinaceus (SchAru),
 
 The repository contains the following parts:
 
